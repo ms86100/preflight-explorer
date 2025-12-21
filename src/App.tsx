@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import Dashboard from "./pages/Dashboard";
 import AuthPage from "./pages/Auth";
 import BoardPage from "./pages/BoardPage";
+import ProjectsPage from "./pages/ProjectsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -79,7 +80,7 @@ function AppRoutes() {
         path="/projects"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <ProjectsPage />
           </ProtectedRoute>
         }
       />

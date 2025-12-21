@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   FolderKanban,
   Plus,
@@ -9,63 +9,15 @@ import {
   ArrowRight,
   CheckCircle2,
   AlertCircle,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AppLayout } from '@/components/layout';
 import { useAuth } from '@/hooks/useAuth';
 import { ClassificationBadge } from '@/components/compliance/ClassificationBanner';
-import { CreateProjectModal } from '@/features/projects';
-import { toast } from 'sonner';
-
-// Mock data for demo
-const RECENT_PROJECTS = [
-  {
-    id: '1',
-    pkey: 'PROJ',
-    name: 'ProjectA',
-    template: 'scrum',
-    classification: 'restricted' as const,
-    lastAccessed: '2 hours ago',
-  },
-  {
-    id: '2',
-    pkey: 'MRTT',
-    name: 'MRTT Program',
-    template: 'scrum',
-    classification: 'export_controlled' as const,
-    lastAccessed: '1 day ago',
-  },
-  {
-    id: '3',
-    pkey: 'DEV',
-    name: 'Development Tools',
-    template: 'kanban',
-    classification: 'confidential' as const,
-    lastAccessed: '3 days ago',
-  },
-];
-
-const ASSIGNED_ISSUES = [
-  {
-    key: 'PROJ-123',
-    summary: 'Implement authentication flow',
-    status: 'In Progress',
-    priority: 'High',
-  },
-  {
-    key: 'PROJ-124',
-    summary: 'Review security audit findings',
-    status: 'To Do',
-    priority: 'Highest',
-  },
-  {
-    key: 'MRTT-45',
-    summary: 'Update compliance documentation',
-    status: 'In Review',
-    priority: 'Medium',
-  },
-];
+import { CreateProjectModal, useProjects, useCreateProject } from '@/features/projects';
+import type { ClassificationLevel, ProjectTemplate } from '@/types/jira';
 
 const STATS = [
   { label: 'Open Issues', value: 24, icon: AlertCircle, color: 'text-warning' },
@@ -74,14 +26,33 @@ const STATS = [
 ];
 
 export default function Dashboard() {
-  const { profile, isAuthenticated, clearanceLevel } = useAuth();
+  const { profile, isAuthenticated } = useAuth();
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
+  const navigate = useNavigate();
 
-  const handleCreateProject = async (data: any) => {
-    // In real app, this would call the API
-    console.log('Creating project:', data);
-    toast.success(`Project "${data.name}" created successfully!`);
+  const { data: projects, isLoading: projectsLoading } = useProjects();
+  const createProject = useCreateProject();
+
+  const handleCreateProject = async (data: {
+    name: string;
+    pkey: string;
+    description?: string;
+    template: 'scrum' | 'kanban' | 'basic';
+    classification: ClassificationLevel;
+    program_id?: string;
+  }) => {
+    const result = await createProject.mutateAsync({
+      name: data.name,
+      pkey: data.pkey,
+      description: data.description,
+      template: data.template as ProjectTemplate,
+      classification: data.classification,
+      program_id: data.program_id,
+    });
+    navigate(`/projects/${result.pkey}/board`);
   };
+
+  const recentProjects = projects?.slice(0, 5) || [];
 
   return (
     <>
@@ -112,7 +83,7 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/projects')}>
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="w-12 h-12 rounded-lg bg-success/10 flex items-center justify-center">
                   <FolderKanban className="h-6 w-6 text-success" />
@@ -164,23 +135,43 @@ export default function Dashboard() {
                   </Button>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    {RECENT_PROJECTS.map((project) => (
-                      <Link key={project.id} to={`/projects/${project.pkey}/board`} className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted transition-colors">
-                        <div className="w-10 h-10 rounded bg-primary/10 flex items-center justify-center">
-                          <FolderKanban className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-medium truncate">{project.name}</h4>
-                            <ClassificationBadge level={project.classification} />
+                  {projectsLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : recentProjects.length === 0 ? (
+                    <div className="text-center py-8">
+                      <FolderKanban className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                      <p className="text-muted-foreground">No projects yet</p>
+                      <Button variant="link" onClick={() => setIsCreateProjectOpen(true)}>
+                        Create your first project
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {recentProjects.map((project) => (
+                        <Link
+                          key={project.id}
+                          to={`/projects/${project.pkey}/board`}
+                          className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted transition-colors"
+                        >
+                          <div className="w-10 h-10 rounded bg-primary/10 flex items-center justify-center">
+                            <FolderKanban className="h-5 w-5 text-primary" />
                           </div>
-                          <p className="text-sm text-muted-foreground">{project.pkey} • {project.template} • {project.lastAccessed}</p>
-                        </div>
-                        <Star className="h-4 w-4 text-muted-foreground hover:text-warning" />
-                      </Link>
-                    ))}
-                  </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-medium truncate">{project.name}</h4>
+                              <ClassificationBadge level={project.classification as ClassificationLevel} />
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {project.pkey} • {project.template}
+                            </p>
+                          </div>
+                          <Star className="h-4 w-4 text-muted-foreground hover:text-warning" />
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -192,42 +183,19 @@ export default function Dashboard() {
                   <CardDescription>Issues requiring your attention</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    {ASSIGNED_ISSUES.map((issue) => (
-                      <div key={issue.key} className="p-3 rounded-lg border border-border hover:bg-muted transition-colors cursor-pointer">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-medium text-primary">{issue.key}</span>
-                          <span className={`lozenge ${issue.status === 'In Progress' ? 'lozenge-inprogress' : issue.status === 'In Review' ? 'lozenge-moved' : 'lozenge-default'}`}>{issue.status}</span>
-                        </div>
-                        <p className="text-sm truncate-2">{issue.summary}</p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className={`text-xs px-1.5 py-0.5 rounded ${issue.priority === 'Highest' ? 'bg-destructive/10 text-destructive' : issue.priority === 'High' ? 'bg-warning/10 text-warning' : 'bg-muted text-muted-foreground'}`}>{issue.priority}</span>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="text-center py-8 text-muted-foreground">
+                    <CheckCircle2 className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No issues assigned to you</p>
                   </div>
-                  <Button variant="ghost" size="sm" className="w-full mt-4">View all my issues</Button>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="pb-2"><CardTitle className="text-lg">Recent Activity</CardTitle></CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex gap-3">
-                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium">SS</div>
-                      <div className="flex-1">
-                        <p className="text-sm"><span className="font-medium">Sagar Sharma</span> updated <span className="text-primary">PROJ-123</span></p>
-                        <p className="text-xs text-muted-foreground">2 hours ago</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-3">
-                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium">JD</div>
-                      <div className="flex-1">
-                        <p className="text-sm"><span className="font-medium">John Doe</span> commented on <span className="text-primary">MRTT-45</span></p>
-                        <p className="text-xs text-muted-foreground">5 hours ago</p>
-                      </div>
-                    </div>
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Clock className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No recent activity</p>
                   </div>
                 </CardContent>
               </Card>
