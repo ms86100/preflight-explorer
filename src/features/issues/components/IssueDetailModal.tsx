@@ -1,7 +1,4 @@
-import { useState, useMemo } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { useState, useEffect } from 'react';
 import {
   X,
   Link as LinkIcon,
@@ -23,7 +20,6 @@ import {
   Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -48,6 +44,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { ClassificationLevel } from '@/types/jira';
+import { TimeTrackingSection } from './TimeTrackingSection';
+import { AttachmentsSection } from './AttachmentsSection';
+import { LinkedIssuesSection } from './LinkedIssuesSection';
+import { CustomFieldsForm } from '@/features/custom-fields/components/CustomFieldsForm';
 
 const ISSUE_TYPE_ICONS: Record<string, typeof Bug> = {
   Epic: Zap,
@@ -73,13 +73,11 @@ interface Comment {
 export function IssueDetailModal({ issueId, open, onOpenChange }: IssueDetailModalProps) {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('details');
-  const [isEditing, setIsEditing] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [comments, setComments] = useState<Comment[]>([]);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
   const { data: issue, isLoading, refetch } = useIssueById(issueId || '');
-  const { data: issueTypes } = useIssueTypes();
   const { data: priorities } = usePriorities();
   const { data: statuses } = useStatuses();
   const updateIssue = useUpdateIssue();
@@ -104,11 +102,11 @@ export function IssueDetailModal({ issueId, open, onOpenChange }: IssueDetailMod
   };
 
   // Load comments when issue changes
-  useState(() => {
+  useEffect(() => {
     if (issueId && open) {
       fetchComments();
     }
-  });
+  }, [issueId, open]);
 
   const handleSubmitComment = async () => {
     if (!newComment.trim() || !issueId || !user?.id) return;
@@ -133,15 +131,6 @@ export function IssueDetailModal({ issueId, open, onOpenChange }: IssueDetailMod
   const handleStatusChange = async (statusId: string) => {
     if (!issueId) return;
     await updateIssue.mutateAsync({ id: issueId, updates: { status_id: statusId } });
-    refetch();
-  };
-
-  const handleAssigneeChange = async (assigneeId: string) => {
-    if (!issueId) return;
-    await updateIssue.mutateAsync({ 
-      id: issueId, 
-      updates: { assignee_id: assigneeId === 'unassigned' ? undefined : assigneeId } 
-    });
     refetch();
   };
 
@@ -300,6 +289,36 @@ export function IssueDetailModal({ issueId, open, onOpenChange }: IssueDetailMod
                   </div>
                 </div>
 
+                <Separator />
+
+                {/* Time Tracking */}
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-3 block">Time Tracking</Label>
+                  <TimeTrackingSection
+                    issueId={issueId}
+                    originalEstimate={issue.original_estimate}
+                    remainingEstimate={issue.remaining_estimate}
+                    timeSpent={issue.time_spent}
+                    onUpdate={() => refetch()}
+                  />
+                </div>
+
+                <Separator />
+
+                {/* Linked Issues */}
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-3 block">Linked Issues</Label>
+                  <LinkedIssuesSection
+                    issueId={issueId}
+                    projectId={issue.project_id}
+                  />
+                </div>
+
+                <Separator />
+
+                {/* Custom Fields */}
+                <CustomFieldsForm issueId={issueId} />
+
                 {/* Dates */}
                 <div className="grid grid-cols-2 gap-4 pt-4 border-t text-xs text-muted-foreground">
                   <div>
@@ -371,14 +390,7 @@ export function IssueDetailModal({ issueId, open, onOpenChange }: IssueDetailMod
               </TabsContent>
 
               <TabsContent value="attachments" className="mt-6">
-                <div className="text-center py-8 text-muted-foreground">
-                  <Paperclip className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No attachments</p>
-                  <Button variant="outline" size="sm" className="mt-3">
-                    <Paperclip className="h-4 w-4 mr-1" />
-                    Attach files
-                  </Button>
-                </div>
+                <AttachmentsSection issueId={issueId} />
               </TabsContent>
 
               <TabsContent value="history" className="mt-6">

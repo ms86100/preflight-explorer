@@ -59,109 +59,20 @@ interface ScrumBoardProps {
   onCreateIssue?: (status?: string) => void;
 }
 
-// Mock data for demo
-const MOCK_COLUMNS = [
+// Default columns when none provided
+const DEFAULT_COLUMNS = [
   { id: 'todo', name: 'To Do', statusCategory: 'todo' as const },
   { id: 'in_progress', name: 'In Progress', statusCategory: 'in_progress' as const, maxIssues: 5 },
-  { id: 'in_review', name: 'In Review', statusCategory: 'in_progress' as const, maxIssues: 3 },
   { id: 'done', name: 'Done', statusCategory: 'done' as const },
 ];
 
-const MOCK_ISSUES: BoardIssue[] = [
-  {
-    id: '1',
-    issue_key: 'MRTT-101',
-    summary: 'Implement secure data transmission protocol for avionics interface',
-    issue_type: 'Story',
-    priority: 'High',
-    status: 'todo',
-    assignee: { display_name: 'Sagar Sharma' },
-    story_points: 8,
-    classification: 'export_controlled',
-    epic_name: 'Avionics Integration',
-    epic_color: '#8777d9',
-  },
-  {
-    id: '2',
-    issue_key: 'MRTT-102',
-    summary: 'Security audit for export control compliance',
-    issue_type: 'Task',
-    priority: 'Highest',
-    status: 'in_progress',
-    assignee: { display_name: 'John Doe' },
-    story_points: 5,
-    classification: 'confidential',
-    labels: ['security', 'audit'],
-  },
-  {
-    id: '3',
-    issue_key: 'MRTT-103',
-    summary: 'Fix data validation bug in flight parameter module',
-    issue_type: 'Bug',
-    priority: 'High',
-    status: 'in_progress',
-    assignee: { display_name: 'Jane Smith' },
-    story_points: 3,
-    classification: 'restricted',
-  },
-  {
-    id: '4',
-    issue_key: 'MRTT-104',
-    summary: 'Update documentation for CCB review',
-    issue_type: 'Task',
-    priority: 'Medium',
-    status: 'in_review',
-    assignee: { display_name: 'Sagar Sharma' },
-    story_points: 2,
-    classification: 'restricted',
-  },
-  {
-    id: '5',
-    issue_key: 'MRTT-100',
-    summary: 'Initial project setup and CI/CD pipeline',
-    issue_type: 'Task',
-    priority: 'Medium',
-    status: 'done',
-    assignee: { display_name: 'John Doe' },
-    story_points: 3,
-    classification: 'restricted',
-  },
-  {
-    id: '6',
-    issue_key: 'MRTT-105',
-    summary: 'Design system architecture for real-time monitoring',
-    issue_type: 'Story',
-    priority: 'Medium',
-    status: 'todo',
-    story_points: 13,
-    classification: 'export_controlled',
-    epic_name: 'Monitoring System',
-    epic_color: '#36b37e',
-  },
-];
-
-const MOCK_SPRINT = {
-  id: 'sprint-1',
-  name: 'Sprint 12',
-  goal: 'Complete avionics integration phase 1 and pass security audit',
-  state: 'active' as SprintState,
-  start_date: '2024-01-08',
-  end_date: '2024-01-22',
-};
-
-const MOCK_TEAM = [
-  { id: '1', display_name: 'Sagar Sharma' },
-  { id: '2', display_name: 'John Doe' },
-  { id: '3', display_name: 'Jane Smith' },
-];
-
 export function ScrumBoard({
-  projectKey = 'MRTT',
-  projectName = 'MRTT Program',
-  sprint = MOCK_SPRINT,
-  columns = MOCK_COLUMNS,
-  issues: initialIssues = MOCK_ISSUES,
-  teamMembers = MOCK_TEAM,
+  projectKey = '',
+  projectName = 'Project',
+  sprint,
+  columns = DEFAULT_COLUMNS,
+  issues: initialIssues = [],
+  teamMembers = [],
   onIssueMove,
   onIssueSelect,
   onCreateIssue,

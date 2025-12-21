@@ -18,6 +18,8 @@ import ReportsPage from "./pages/ReportsPage";
 import AdminPage from "./pages/AdminPage";
 import ProfilePage from "./pages/ProfilePage";
 import ProjectSettingsPage from "./pages/ProjectSettingsPage";
+import PluginsPage from "./pages/PluginsPage";
+import AutomationPage from "./pages/AutomationPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -245,6 +247,26 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Plugins */}
+      <Route
+        path="/plugins"
+        element={
+          <ProtectedRoute>
+            <PluginsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Automation */}
+      <Route
+        path="/automation"
+        element={
+          <ProtectedRoute>
+            <AutomationPage />
           </ProtectedRoute>
         }
       />
