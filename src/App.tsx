@@ -10,6 +10,8 @@ import Dashboard from "./pages/Dashboard";
 import AuthPage from "./pages/Auth";
 import BoardPage from "./pages/BoardPage";
 import ProjectsPage from "./pages/ProjectsPage";
+import BacklogPage from "./pages/BacklogPage";
+import IssuesPage from "./pages/IssuesPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -93,10 +95,18 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/projects/:projectKey/backlog"
+        element={
+          <ProtectedRoute>
+            <BacklogPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/projects/:projectKey/*"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <BoardPage />
           </ProtectedRoute>
         }
       />
@@ -116,7 +126,7 @@ function AppRoutes() {
         path="/issues"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <IssuesPage />
           </ProtectedRoute>
         }
       />
