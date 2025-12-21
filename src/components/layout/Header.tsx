@@ -1,17 +1,18 @@
 import { Link, useLocation } from 'react-router-dom';
 import {
   Search,
-  Bell,
   HelpCircle,
   Settings,
   ChevronDown,
-  Plus,
-  Grid3X3,
   LayoutDashboard,
   FolderKanban,
   ListTodo,
-  Users,
+  Grid3X3,
   BarChart3,
+  Workflow,
+  Puzzle,
+  Zap,
+  Shield,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,6 +26,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
+import { NotificationBell } from '@/features/notifications/components/NotificationBell';
 
 const NAV_ITEMS = [
   {
@@ -72,6 +74,15 @@ const NAV_ITEMS = [
       { label: 'Dependencies', href: '/plans/dependencies' },
     ],
   },
+];
+
+const ADMIN_ITEMS = [
+  { label: 'Workflows', href: '/workflows', icon: Workflow },
+  { label: 'Custom Fields', href: '/custom-fields', icon: Settings },
+  { label: 'Plugins', href: '/plugins', icon: Puzzle },
+  { label: 'Automation', href: '/automation', icon: Zap },
+  { label: 'Reports', href: '/reports', icon: BarChart3 },
+  { label: 'Admin', href: '/admin', icon: Shield },
 ];
 
 export function Header() {
@@ -133,6 +144,29 @@ export function Header() {
           </DropdownMenu>
         ))}
 
+        {/* Settings/Admin Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="text-header-foreground/90 hover:text-header-foreground hover:bg-white/10 gap-1"
+            >
+              Settings
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-56">
+            {ADMIN_ITEMS.map((item) => (
+              <DropdownMenuItem key={item.href} asChild>
+                <Link to={item.href} className="flex items-center gap-2">
+                  <item.icon className="h-4 w-4" />
+                  {item.label}
+                </Link>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         {/* Create Button */}
         <Button
           asChild
@@ -158,14 +192,14 @@ export function Header() {
 
       {/* Right Actions */}
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="text-header-foreground/90 hover:text-header-foreground hover:bg-white/10">
-          <Bell className="h-5 w-5" />
-        </Button>
+        <NotificationBell />
         <Button variant="ghost" size="icon" className="text-header-foreground/90 hover:text-header-foreground hover:bg-white/10">
           <HelpCircle className="h-5 w-5" />
         </Button>
-        <Button variant="ghost" size="icon" className="text-header-foreground/90 hover:text-header-foreground hover:bg-white/10">
-          <Settings className="h-5 w-5" />
+        <Button variant="ghost" size="icon" className="text-header-foreground/90 hover:text-header-foreground hover:bg-white/10" asChild>
+          <Link to="/profile">
+            <Settings className="h-5 w-5" />
+          </Link>
         </Button>
 
         {/* User Menu */}
