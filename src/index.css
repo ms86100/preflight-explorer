@@ -1,96 +1,155 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* ============================================
+   JIRA DATA CENTER CLONE - DESIGN SYSTEM
+   Atlassian Design System + MRTT+ Compliance
+   ============================================ */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
+    /* Atlassian Brand Colors */
+    --atlassian-blue: 216 100% 50%;
+    --atlassian-blue-dark: 216 100% 40%;
+    --atlassian-blue-light: 216 100% 95%;
+    
+    /* Classification Colors (MRTT+ Compliance) */
+    --classification-public: 142 76% 36%;
+    --classification-restricted: 45 93% 47%;
+    --classification-confidential: 25 95% 53%;
+    --classification-export-controlled: 0 84% 60%;
+    
+    /* Core Semantic Tokens */
+    --background: 210 20% 98%;
+    --foreground: 215 25% 15%;
+    
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
+    --card-foreground: 215 25% 15%;
+    
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --popover-foreground: 215 25% 15%;
+    
+    /* Atlassian Blue as Primary */
+    --primary: 216 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Neutral Secondary */
+    --secondary: 214 14% 95%;
+    --secondary-foreground: 215 25% 15%;
+    
+    --muted: 214 14% 95%;
+    --muted-foreground: 215 16% 47%;
+    
+    --accent: 214 14% 95%;
+    --accent-foreground: 215 25% 15%;
+    
+    /* Status Colors */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 45 93% 47%;
+    --warning-foreground: 215 25% 15%;
+    
+    --info: 201 96% 32%;
+    --info-foreground: 0 0% 100%;
+    
+    /* Borders & Inputs */
+    --border: 214 20% 88%;
+    --input: 214 20% 88%;
+    --ring: 216 100% 50%;
+    
+    --radius: 0.25rem;
+    
+    /* Jira-style Sidebar */
+    --sidebar-background: 220 16% 22%;
+    --sidebar-foreground: 210 20% 90%;
+    --sidebar-primary: 216 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 16% 28%;
+    --sidebar-accent-foreground: 210 20% 90%;
+    --sidebar-border: 220 16% 28%;
+    --sidebar-ring: 216 100% 50%;
+    --sidebar-muted: 220 16% 35%;
+    
+    /* Header */
+    --header-background: 216 100% 50%;
+    --header-foreground: 0 0% 100%;
+    
+    /* Issue Type Colors */
+    --issue-epic: 271 68% 53%;
+    --issue-story: 142 72% 47%;
+    --issue-task: 201 96% 55%;
+    --issue-bug: 0 84% 60%;
+    --issue-subtask: 201 96% 55%;
+    
+    /* Priority Colors */
+    --priority-highest: 0 84% 45%;
+    --priority-high: 25 95% 53%;
+    --priority-medium: 45 93% 47%;
+    --priority-low: 142 76% 36%;
+    --priority-lowest: 160 84% 39%;
+    
+    /* Status Colors */
+    --status-todo: 215 16% 47%;
+    --status-in-progress: 216 100% 50%;
+    --status-done: 142 76% 36%;
+    --status-blocked: 0 84% 60%;
+    
+    /* Lozenge Colors */
+    --lozenge-default-bg: 214 14% 95%;
+    --lozenge-default-text: 215 25% 35%;
+    --lozenge-success-bg: 142 76% 94%;
+    --lozenge-success-text: 142 76% 30%;
+    --lozenge-moved-bg: 45 93% 92%;
+    --lozenge-moved-text: 45 93% 30%;
+    --lozenge-inprogress-bg: 216 100% 95%;
+    --lozenge-inprogress-text: 216 100% 40%;
+    --lozenge-removed-bg: 0 84% 95%;
+    --lozenge-removed-text: 0 84% 40%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --background: 220 16% 12%;
+    --foreground: 210 20% 90%;
+    
+    --card: 220 16% 16%;
+    --card-foreground: 210 20% 90%;
+    
+    --popover: 220 16% 16%;
+    --popover-foreground: 210 20% 90%;
+    
+    --primary: 216 100% 55%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 220 16% 22%;
+    --secondary-foreground: 210 20% 90%;
+    
+    --muted: 220 16% 22%;
+    --muted-foreground: 215 16% 60%;
+    
+    --accent: 220 16% 22%;
+    --accent-foreground: 210 20% 90%;
+    
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 220 16% 28%;
+    --input: 220 16% 28%;
+    --ring: 216 100% 55%;
+    
+    --sidebar-background: 220 16% 10%;
+    --sidebar-foreground: 210 20% 85%;
+    --sidebar-accent: 220 16% 16%;
+    --sidebar-border: 220 16% 20%;
+    
+    --header-background: 220 16% 16%;
+    --header-foreground: 210 20% 90%;
   }
 }
 
@@ -100,6 +159,115 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  
+  /* Jira-style scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/40;
+  }
+}
+
+@layer components {
+  /* Jira Lozenge (Status Badge) */
+  .lozenge {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wide;
+  }
+  
+  .lozenge-default {
+    background-color: hsl(var(--lozenge-default-bg));
+    color: hsl(var(--lozenge-default-text));
+  }
+  
+  .lozenge-success {
+    background-color: hsl(var(--lozenge-success-bg));
+    color: hsl(var(--lozenge-success-text));
+  }
+  
+  .lozenge-inprogress {
+    background-color: hsl(var(--lozenge-inprogress-bg));
+    color: hsl(var(--lozenge-inprogress-text));
+  }
+  
+  .lozenge-moved {
+    background-color: hsl(var(--lozenge-moved-bg));
+    color: hsl(var(--lozenge-moved-text));
+  }
+  
+  .lozenge-removed {
+    background-color: hsl(var(--lozenge-removed-bg));
+    color: hsl(var(--lozenge-removed-text));
+  }
+  
+  /* Classification Banner (MRTT+ Compliance) */
+  .classification-banner {
+    @apply w-full py-1 px-4 text-center text-xs font-bold uppercase tracking-wider;
+  }
+  
+  .classification-public {
+    background-color: hsl(var(--classification-public));
+    @apply text-white;
+  }
+  
+  .classification-restricted {
+    background-color: hsl(var(--classification-restricted));
+    @apply text-black;
+  }
+  
+  .classification-confidential {
+    background-color: hsl(var(--classification-confidential));
+    @apply text-white;
+  }
+  
+  .classification-export-controlled {
+    background-color: hsl(var(--classification-export-controlled));
+    @apply text-white;
+  }
+  
+  /* Jira Issue Card */
+  .issue-card {
+    @apply bg-card border border-border rounded p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer;
+  }
+  
+  /* Jira Quick Filter */
+  .quick-filter {
+    @apply inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-sm border transition-colors;
+  }
+  
+  .quick-filter-inactive {
+    @apply bg-transparent border-border text-muted-foreground hover:bg-secondary hover:text-foreground;
+  }
+  
+  .quick-filter-active {
+    @apply bg-primary border-primary text-primary-foreground;
+  }
+}
+
+@layer utilities {
+  /* Focus ring utility */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background;
+  }
+  
+  /* Truncate with ellipsis */
+  .truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 }
