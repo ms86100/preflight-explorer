@@ -1,0 +1,208 @@
+import { supabase } from '@/integrations/supabase/client';
+import type { ClassificationLevel } from '@/types/jira';
+
+export interface IssueInsert {
+  project_id: string;
+  summary: string;
+  description?: string;
+  issue_type_id: string;
+  status_id: string;
+  priority_id?: string;
+  assignee_id?: string;
+  parent_id?: string;
+  epic_id?: string;
+  due_date?: string;
+  story_points?: number;
+  classification?: ClassificationLevel;
+}
+
+export interface IssueRow {
+  id: string;
+  project_id: string;
+  issue_key: string;
+  issue_number: number;
+  summary: string;
+  description: string | null;
+  issue_type_id: string;
+  status_id: string;
+  priority_id: string | null;
+  resolution_id: string | null;
+  reporter_id: string;
+  assignee_id: string | null;
+  parent_id: string | null;
+  epic_id: string | null;
+  due_date: string | null;
+  original_estimate: number | null;
+  remaining_estimate: number | null;
+  time_spent: number | null;
+  story_points: number | null;
+  environment: string | null;
+  lexorank: string | null;
+  classification: string;
+  resolved_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface IssueWithRelations extends IssueRow {
+  issue_type: { id: string; name: string; color: string; category: string } | null;
+  status: { id: string; name: string; color: string; category: string } | null;
+  priority: { id: string; name: string; color: string } | null;
+  reporter: { id: string; display_name: string; avatar_url: string | null } | null;
+  assignee: { id: string; display_name: string; avatar_url: string | null } | null;
+  epic: { id: string; issue_key: string; summary: string } | null;
+}
+
+export const issueService = {
+  async getByProject(projectId: string) {
+    const { data, error } = await supabase
+      .from('issues')
+      .select(`
+        *,
+        issue_type:issue_types(id, name, color, category),
+        status:issue_statuses(id, name, color, category),
+        priority:priorities(id, name, color),
+        reporter:profiles!issues_reporter_id_fkey(id, display_name, avatar_url),
+        assignee:profiles!issues_assignee_id_fkey(id, display_name, avatar_url),
+        epic:issues!issues_epic_id_fkey(id, issue_key, summary)
+      `)
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data as unknown as IssueWithRelations[];
+  },
+
+  async getByKey(issueKey: string) {
+    const { data, error } = await supabase
+      .from('issues')
+      .select(`
+        *,
+        issue_type:issue_types(id, name, color, category),
+        status:issue_statuses(id, name, color, category),
+        priority:priorities(id, name, color),
+        reporter:profiles!issues_reporter_id_fkey(id, display_name, avatar_url),
+        assignee:profiles!issues_assignee_id_fkey(id, display_name, avatar_url),
+        epic:issues!issues_epic_id_fkey(id, issue_key, summary)
+      `)
+      .eq('issue_key', issueKey)
+      .single();
+
+    if (error) throw error;
+    return data as unknown as IssueWithRelations;
+  },
+
+  async getById(id: string) {
+    const { data, error } = await supabase
+      .from('issues')
+      .select(`
+        *,
+        issue_type:issue_types(id, name, color, category),
+        status:issue_statuses(id, name, color, category),
+        priority:priorities(id, name, color),
+        reporter:profiles!issues_reporter_id_fkey(id, display_name, avatar_url),
+        assignee:profiles!issues_assignee_id_fkey(id, display_name, avatar_url),
+        epic:issues!issues_epic_id_fkey(id, issue_key, summary)
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+    return data as unknown as IssueWithRelations;
+  },
+
+  async create(issue: IssueInsert, reporterId: string) {
+    const insertData = {
+      project_id: issue.project_id,
+      summary: issue.summary,
+      description: issue.description,
+      issue_type_id: issue.issue_type_id,
+      status_id: issue.status_id,
+      priority_id: issue.priority_id,
+      assignee_id: issue.assignee_id,
+      parent_id: issue.parent_id,
+      epic_id: issue.epic_id,
+      due_date: issue.due_date,
+      story_points: issue.story_points,
+      classification: issue.classification || 'restricted',
+      reporter_id: reporterId,
+    };
+
+    const { data, error } = await supabase
+      .from('issues')
+      .insert(insertData as any)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data as IssueRow;
+  },
+
+  async update(id: string, updates: Partial<IssueInsert>) {
+    const { data, error } = await supabase
+      .from('issues')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data as IssueRow;
+  },
+
+  async updateStatus(id: string, statusId: string) {
+    const { data, error } = await supabase
+      .from('issues')
+      .update({ status_id: statusId })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data as IssueRow;
+  },
+
+  async delete(id: string) {
+    const { error } = await supabase.from('issues').delete().eq('id', id);
+    if (error) throw error;
+  },
+};
+
+// Reference data services
+export const referenceDataService = {
+  async getIssueTypes() {
+    const { data, error } = await supabase
+      .from('issue_types')
+      .select('*')
+      .order('position');
+    if (error) throw error;
+    return data;
+  },
+
+  async getPriorities() {
+    const { data, error } = await supabase
+      .from('priorities')
+      .select('*')
+      .order('position');
+    if (error) throw error;
+    return data;
+  },
+
+  async getStatuses() {
+    const { data, error } = await supabase
+      .from('issue_statuses')
+      .select('*')
+      .order('position');
+    if (error) throw error;
+    return data;
+  },
+
+  async getResolutions() {
+    const { data, error } = await supabase
+      .from('resolutions')
+      .select('*')
+      .order('position');
+    if (error) throw error;
+    return data;
+  },
+};
