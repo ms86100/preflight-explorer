@@ -13,6 +13,7 @@ import ProjectsPage from "./pages/ProjectsPage";
 import BacklogPage from "./pages/BacklogPage";
 import IssuesPage from "./pages/IssuesPage";
 import WorkflowsPage from "./pages/WorkflowsPage";
+import CustomFieldsPage from "./pages/CustomFieldsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -168,6 +169,16 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <WorkflowsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Custom Fields */}
+      <Route
+        path="/custom-fields"
+        element={
+          <ProtectedRoute>
+            <CustomFieldsPage />
           </ProtectedRoute>
         }
       />

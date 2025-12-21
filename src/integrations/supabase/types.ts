@@ -297,6 +297,154 @@ export type Database = {
           },
         ]
       }
+      custom_field_contexts: {
+        Row: {
+          created_at: string | null
+          default_value: string | null
+          field_id: string
+          id: string
+          is_required: boolean | null
+          issue_type_id: string | null
+          project_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          default_value?: string | null
+          field_id: string
+          id?: string
+          is_required?: boolean | null
+          issue_type_id?: string | null
+          project_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          default_value?: string | null
+          field_id?: string
+          id?: string
+          is_required?: boolean | null
+          issue_type_id?: string | null
+          project_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_field_contexts_field_id_fkey"
+            columns: ["field_id"]
+            isOneToOne: false
+            referencedRelation: "custom_field_definitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_field_contexts_issue_type_id_fkey"
+            columns: ["issue_type_id"]
+            isOneToOne: false
+            referencedRelation: "issue_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_field_contexts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_field_definitions: {
+        Row: {
+          created_at: string | null
+          default_value: string | null
+          description: string | null
+          field_type: string
+          id: string
+          is_active: boolean | null
+          is_required: boolean | null
+          name: string
+          options: Json | null
+          position: number | null
+          updated_at: string | null
+          validation_rules: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          default_value?: string | null
+          description?: string | null
+          field_type: string
+          id?: string
+          is_active?: boolean | null
+          is_required?: boolean | null
+          name: string
+          options?: Json | null
+          position?: number | null
+          updated_at?: string | null
+          validation_rules?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          default_value?: string | null
+          description?: string | null
+          field_type?: string
+          id?: string
+          is_active?: boolean | null
+          is_required?: boolean | null
+          name?: string
+          options?: Json | null
+          position?: number | null
+          updated_at?: string | null
+          validation_rules?: Json | null
+        }
+        Relationships: []
+      }
+      custom_field_values: {
+        Row: {
+          created_at: string | null
+          field_id: string
+          id: string
+          issue_id: string
+          updated_at: string | null
+          value_date: string | null
+          value_json: Json | null
+          value_number: number | null
+          value_text: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          field_id: string
+          id?: string
+          issue_id: string
+          updated_at?: string | null
+          value_date?: string | null
+          value_json?: Json | null
+          value_number?: number | null
+          value_text?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          field_id?: string
+          id?: string
+          issue_id?: string
+          updated_at?: string | null
+          value_date?: string | null
+          value_json?: Json | null
+          value_number?: number | null
+          value_text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_field_values_field_id_fkey"
+            columns: ["field_id"]
+            isOneToOne: false
+            referencedRelation: "custom_field_definitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_field_values_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "issues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_memberships: {
         Row: {
           created_at: string | null
