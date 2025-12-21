@@ -9,27 +9,31 @@ import { cn } from '@/lib/utils';
 interface AppLayoutProps {
   children?: React.ReactNode;
   showSidebar?: boolean;
+  projectKey?: string;
 }
 
-export function AppLayout({ children, showSidebar = true }: AppLayoutProps) {
+export function AppLayout({ children, showSidebar = true, projectKey }: AppLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { clearanceLevel } = useAuth();
   const location = useLocation();
 
   // Check if we're in a project context
-  const isProjectView = location.pathname.startsWith('/projects/') && 
-    location.pathname.split('/').length > 2;
+  const isProjectView = projectKey || (location.pathname.startsWith('/projects/') && 
+    location.pathname.split('/').length > 2);
+
+  // Get project key from props or URL
+  const currentProjectKey = projectKey || location.pathname.split('/')[2];
 
   // Mock project for demo - in real app, fetch from route params
   const mockProject = isProjectView ? {
     id: '1',
-    pkey: 'PROJ',
-    name: 'ProjectA',
+    pkey: currentProjectKey || 'PROJ',
+    name: currentProjectKey === 'MRTT' ? 'MRTT Program' : 'ProjectA',
     project_type: 'software' as const,
     template: 'scrum' as const,
     issue_counter: 0,
     is_archived: false,
-    classification: 'restricted' as const,
+    classification: currentProjectKey === 'MRTT' ? 'export_controlled' as const : 'restricted' as const,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   } : undefined;

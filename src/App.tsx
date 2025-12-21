@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 // Pages
 import Dashboard from "./pages/Dashboard";
 import AuthPage from "./pages/Auth";
+import BoardPage from "./pages/BoardPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -79,6 +80,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/projects/:projectKey/board"
+        element={
+          <ProtectedRoute>
+            <BoardPage />
           </ProtectedRoute>
         }
       />
