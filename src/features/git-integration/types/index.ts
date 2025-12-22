@@ -226,6 +226,15 @@ export interface CreateGitOrganizationInput {
   oauth_client_id?: string;
   oauth_client_secret?: string;
   access_token?: string;
+  access_token_encrypted?: string;
+  webhook_secret?: string;
+}
+
+export interface UpdateGitOrganizationInput {
+  is_active?: boolean;
+  webhook_secret?: string;
+  last_sync_at?: string;
+  last_sync_error?: string;
 }
 
 export interface LinkRepositoryInput {
@@ -238,4 +247,10 @@ export interface LinkRepositoryInput {
   web_url?: string;
   default_branch?: string;
   smartcommits_enabled?: boolean;
+}
+
+export interface UpdateRepositoryInput {
+  smartcommits_enabled?: boolean;
+  is_active?: boolean;
+  project_id?: string;
 }

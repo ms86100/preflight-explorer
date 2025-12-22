@@ -7,8 +7,9 @@ import {
   getGitRepository,
   linkRepository,
   unlinkRepository,
+  updateRepository,
 } from '../services/gitIntegrationService';
-import type { LinkRepositoryInput } from '../types';
+import type { LinkRepositoryInput, UpdateRepositoryInput } from '../types';
 
 const QUERY_KEY = 'git-repositories';
 
@@ -24,6 +25,53 @@ export function useGitRepository(id: string | undefined) {
     queryKey: [QUERY_KEY, 'single', id],
     queryFn: () => (id ? getGitRepository(id) : null),
     enabled: !!id,
+  });
+}
+
+export function useCreateGitRepository() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (input: LinkRepositoryInput) => linkRepository(input),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, variables.project_id] });
+      toast.success('Repository linked successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to link repository: ${error.message}`);
+    },
+  });
+}
+
+export function useUpdateGitRepository() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ id, ...updates }: { id: string } & UpdateRepositoryInput) =>
+      updateRepository(id, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      toast.success('Repository updated successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to update repository: ${error.message}`);
+    },
+  });
+}
+
+export function useDeleteGitRepository() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (id: string) => unlinkRepository(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+      toast.success('Repository unlinked');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to unlink repository: ${error.message}`);
+    },
   });
 }
 

@@ -12,7 +12,9 @@ import type {
   GitDeployment,
   IssueDevelopmentInfo,
   CreateGitOrganizationInput,
+  UpdateGitOrganizationInput,
   LinkRepositoryInput,
+  UpdateRepositoryInput,
 } from '../types';
 
 // =============================================
@@ -54,8 +56,9 @@ export async function createGitOrganization(input: CreateGitOrganizationInput): 
       host_url: input.host_url,
       provider_type: input.provider_type,
       oauth_client_id: input.oauth_client_id,
-      oauth_client_secret_encrypted: input.oauth_client_secret, // TODO: Encrypt
-      access_token_encrypted: input.access_token, // TODO: Encrypt
+      oauth_client_secret_encrypted: input.oauth_client_secret,
+      access_token_encrypted: input.access_token_encrypted || input.access_token,
+      webhook_secret: input.webhook_secret,
       created_by: user.user.id,
     })
     .select()
@@ -67,18 +70,18 @@ export async function createGitOrganization(input: CreateGitOrganizationInput): 
 
 export async function updateGitOrganization(
   id: string,
-  updates: Partial<CreateGitOrganizationInput>
+  updates: UpdateGitOrganizationInput
 ): Promise<GitOrganization> {
+  const updateData: Record<string, unknown> = {};
+  
+  if (updates.is_active !== undefined) updateData.is_active = updates.is_active;
+  if (updates.webhook_secret !== undefined) updateData.webhook_secret = updates.webhook_secret;
+  if (updates.last_sync_at !== undefined) updateData.last_sync_at = updates.last_sync_at;
+  if (updates.last_sync_error !== undefined) updateData.last_sync_error = updates.last_sync_error;
+
   const { data, error } = await supabase
     .from('git_organizations')
-    .update({
-      name: updates.name,
-      host_url: updates.host_url,
-      provider_type: updates.provider_type,
-      oauth_client_id: updates.oauth_client_id,
-      oauth_client_secret_encrypted: updates.oauth_client_secret,
-      access_token_encrypted: updates.access_token,
-    })
+    .update(updateData)
     .eq('id', id)
     .select()
     .single();
@@ -153,10 +156,31 @@ export async function linkRepository(input: LinkRepositoryInput): Promise<GitRep
 export async function unlinkRepository(id: string): Promise<void> {
   const { error } = await supabase
     .from('git_repositories')
-    .update({ project_id: null, is_active: false })
+    .delete()
     .eq('id', id);
   
   if (error) throw error;
+}
+
+export async function updateRepository(
+  id: string,
+  updates: UpdateRepositoryInput
+): Promise<GitRepository> {
+  const updateData: Record<string, unknown> = {};
+  
+  if (updates.smartcommits_enabled !== undefined) updateData.smartcommits_enabled = updates.smartcommits_enabled;
+  if (updates.is_active !== undefined) updateData.is_active = updates.is_active;
+  if (updates.project_id !== undefined) updateData.project_id = updates.project_id;
+
+  const { data, error } = await supabase
+    .from('git_repositories')
+    .update(updateData)
+    .eq('id', id)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data as GitRepository;
 }
 
 // =============================================

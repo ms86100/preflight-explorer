@@ -2,8 +2,9 @@ import React from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { ComplianceDashboard, DataExportControls } from '@/features/compliance';
 import { AuditLogsViewer, PermissionSchemesManager } from '@/features/enterprise';
+import { GitIntegrationPanel } from '@/features/git-integration/components/GitIntegrationPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Shield, FileText, Lock, Download } from 'lucide-react';
+import { Shield, FileText, Lock, Download, GitBranch } from 'lucide-react';
 
 export default function AdminPage() {
   return (
@@ -23,6 +24,10 @@ export default function AdminPage() {
               <Shield className="h-4 w-4" />
               Compliance
             </TabsTrigger>
+            <TabsTrigger value="git" className="gap-2">
+              <GitBranch className="h-4 w-4" />
+              Git Integration
+            </TabsTrigger>
             <TabsTrigger value="audit" className="gap-2">
               <FileText className="h-4 w-4" />
               Audit Logs
@@ -39,6 +44,9 @@ export default function AdminPage() {
 
           <TabsContent value="compliance">
             <ComplianceDashboard />
+          </TabsContent>
+          <TabsContent value="git">
+            <GitIntegrationPanel />
           </TabsContent>
           <TabsContent value="audit">
             <AuditLogsViewer />
