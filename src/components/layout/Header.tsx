@@ -11,8 +11,12 @@ import {
   Shield,
   Upload,
   Users,
+  FileText,
+  Grid3X3,
+  Navigation,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { usePluginContext } from '@/features/plugins/context/PluginContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -80,9 +84,17 @@ const ADMIN_ITEMS = [
   { label: 'Admin', href: '/admin', icon: Shield },
 ];
 
+// Plugin feature items - shown conditionally based on enabled plugins
+const PLUGIN_FEATURE_ITEMS = [
+  { label: 'Document Composer', href: '/plugin-features?tab=document-composer', icon: FileText, feature: 'document-composer' },
+  { label: 'Structured Data', href: '/plugin-features?tab=structured-data', icon: Grid3X3, feature: 'structured-data-blocks' },
+  { label: 'Guided Operations', href: '/plugin-features?tab=guided-operations', icon: Navigation, feature: 'guided-operations' },
+];
+
 export function Header() {
   const { user, profile, signOut, isAuthenticated } = useAuth();
   const location = useLocation();
+  const { isFeatureEnabled, isLoading: pluginsLoading } = usePluginContext();
 
   const projectKeyFromPath = (() => {
     const parts = location.pathname.split('/').filter(Boolean);
@@ -164,6 +176,25 @@ export function Header() {
                 </Link>
               </DropdownMenuItem>
             ))}
+            {/* Plugin Features - Only show if at least one plugin feature is enabled */}
+            {!pluginsLoading && PLUGIN_FEATURE_ITEMS.some(item => isFeatureEnabled(item.feature)) && (
+              <>
+                <DropdownMenuSeparator />
+                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                  Plugin Features
+                </div>
+                {PLUGIN_FEATURE_ITEMS.map((item) => (
+                  isFeatureEnabled(item.feature) && (
+                    <DropdownMenuItem key={item.href} asChild className="text-sm">
+                      <Link to={item.href} className="flex items-center gap-2">
+                        <item.icon className="h-4 w-4" />
+                        {item.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  )
+                ))}
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
 
