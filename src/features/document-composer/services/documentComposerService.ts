@@ -143,13 +143,13 @@ export async function createExport(exportData: {
 
   if (error) throw error;
   
-  // Simulate processing (in real app, this would be an edge function)
-  setTimeout(() => processExport(data.id), 1000);
+  // Process the export immediately
+  processExport(data.id, exportData.issueIds, exportData.format);
   
   return mapDbToExport(data);
 }
 
-async function processExport(exportId: string): Promise<void> {
+async function processExport(exportId: string, issueIds: string[], format: ExportFormat): Promise<void> {
   try {
     // Update to processing
     await supabase
@@ -157,19 +157,99 @@ async function processExport(exportId: string): Promise<void> {
       .update({ status: 'processing' })
       .eq('id', exportId);
 
-    // Simulate export generation (2-3 seconds)
-    await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 1000));
+    // Fetch issue data
+    let issueData: Record<string, unknown>[] = [];
+    if (issueIds.length > 0) {
+      const { data } = await supabase
+        .from('issues')
+        .select('id, issue_key, summary, description, status_id, priority_id, created_at')
+        .in('id', issueIds);
+      issueData = data || [];
+    } else {
+      // If no specific issues, get recent ones
+      const { data } = await supabase
+        .from('issues')
+        .select('id, issue_key, summary, description, status_id, priority_id, created_at')
+        .limit(50);
+      issueData = data || [];
+    }
 
-    // Mark as completed
+    // Generate file content based on format
+    let fileContent: string;
+    let mimeType: string;
+    
+    if (format === 'xlsx' || format === 'csv') {
+      // Generate CSV content
+      const headers = ['Issue Key', 'Summary', 'Description', 'Created At'];
+      const rows = issueData.map(issue => [
+        issue.issue_key || '',
+        `"${(issue.summary as string || '').replace(/"/g, '""')}"`,
+        `"${(issue.description as string || '').replace(/"/g, '""')}"`,
+        issue.created_at || '',
+      ]);
+      fileContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      mimeType = 'text/csv';
+    } else if (format === 'html') {
+      // Generate HTML content
+      fileContent = `<!DOCTYPE html>
+<html>
+<head>
+  <title>Issue Export</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #4a5568; color: white; }
+    tr:nth-child(even) { background-color: #f8f9fa; }
+  </style>
+</head>
+<body>
+  <h1>Issue Export</h1>
+  <p>Generated: ${new Date().toISOString()}</p>
+  <table>
+    <thead>
+      <tr><th>Issue Key</th><th>Summary</th><th>Description</th><th>Created</th></tr>
+    </thead>
+    <tbody>
+      ${issueData.map(issue => `
+        <tr>
+          <td>${issue.issue_key || ''}</td>
+          <td>${issue.summary || ''}</td>
+          <td>${issue.description || ''}</td>
+          <td>${issue.created_at || ''}</td>
+        </tr>
+      `).join('')}
+    </tbody>
+  </table>
+</body>
+</html>`;
+      mimeType = 'text/html';
+    } else {
+      // Default to JSON
+      fileContent = JSON.stringify({
+        exportedAt: new Date().toISOString(),
+        issueCount: issueData.length,
+        issues: issueData,
+      }, null, 2);
+      mimeType = 'application/json';
+    }
+
+    // Store the generated content as base64 in the options field (for download)
+    const fileSize = new Blob([fileContent]).size;
+    const base64Content = btoa(unescape(encodeURIComponent(fileContent)));
+
+    // Mark as completed with file data
     await supabase
       .from('document_exports')
       .update({ 
         status: 'completed',
         completed_at: new Date().toISOString(),
-        file_size: Math.floor(Math.random() * 500000) + 50000, // Random file size
+        file_size: fileSize,
+        options: { content: base64Content, mimeType, originalFormat: format },
       })
       .eq('id', exportId);
-  } catch {
+  } catch (err) {
+    console.error('Export processing error:', err);
     await supabase
       .from('document_exports')
       .update({ 
@@ -178,6 +258,52 @@ async function processExport(exportId: string): Promise<void> {
       })
       .eq('id', exportId);
   }
+}
+
+export async function downloadExport(exportJob: ExportJob): Promise<void> {
+  // Fetch the export with options containing the file content
+  const { data, error } = await supabase
+    .from('document_exports')
+    .select('options, name, format')
+    .eq('id', exportJob.id)
+    .single();
+
+  if (error || !data) {
+    throw new Error('Export not found');
+  }
+
+  const options = data.options as { content?: string; mimeType?: string; originalFormat?: string } | null;
+  
+  if (!options?.content) {
+    throw new Error('Export file not available');
+  }
+
+  // Decode base64 content
+  const content = decodeURIComponent(escape(atob(options.content)));
+  const mimeType = options.mimeType || 'application/octet-stream';
+  
+  // Determine file extension
+  const format = options.originalFormat || data.format;
+  const extMap: Record<string, string> = {
+    pdf: 'json', // Fallback since we can't generate real PDFs
+    xlsx: 'csv',
+    docx: 'html',
+    csv: 'csv',
+    html: 'html',
+    json: 'json',
+  };
+  const ext = extMap[format] || 'txt';
+
+  // Create and trigger download
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${data.name || 'export'}.${ext}`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 export async function deleteExport(id: string): Promise<void> {
