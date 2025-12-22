@@ -8,7 +8,7 @@ import {
   useDeleteWorkflowTransition,
   useUpdateWorkflow
 } from '../hooks/useWorkflows';
-import { useStatuses } from '@/features/issues/hooks/useIssues';
+import { useStatuses, useCreateStatus } from '@/features/issues/hooks/useIssues';
 import { WorkflowStepRow, WorkflowTransitionRow } from '../services/workflowService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,7 +26,6 @@ import {
   Clock,
   Star,
   Edit2,
-  Copy,
   MoreVertical
 } from 'lucide-react';
 import {
@@ -49,6 +48,13 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -70,6 +76,11 @@ interface ConnectionState {
   fromY: number;
 }
 
+// Local position state for smooth dragging
+interface StepPositions {
+  [stepId: string]: { x: number; y: number };
+}
+
 export function WorkflowDesigner({ workflowId }: WorkflowDesignerProps) {
   const { data: workflow, isLoading } = useWorkflowWithDetails(workflowId);
   const { data: allStatuses } = useStatuses();
@@ -79,16 +90,26 @@ export function WorkflowDesigner({ workflowId }: WorkflowDesignerProps) {
   const addTransition = useAddWorkflowTransition();
   const deleteTransition = useDeleteWorkflowTransition();
   const updateWorkflow = useUpdateWorkflow();
+  const createStatus = useCreateStatus();
 
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [connectionState, setConnectionState] = useState<ConnectionState | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const canvasRef = useRef<HTMLDivElement>(null);
   
+  // Local positions for smooth dragging (not synced to DB until mouseUp)
+  const [localPositions, setLocalPositions] = useState<StepPositions>({});
+  
   // Edit workflow properties state
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
+  
+  // Create status dialog state
+  const [isCreateStatusOpen, setIsCreateStatusOpen] = useState(false);
+  const [newStatusName, setNewStatusName] = useState('');
+  const [newStatusCategory, setNewStatusCategory] = useState<'todo' | 'in_progress' | 'done'>('todo');
+  const [newStatusColor, setNewStatusColor] = useState('#6B7280');
 
   // Initialize edit form when workflow loads
   useEffect(() => {
@@ -97,6 +118,17 @@ export function WorkflowDesigner({ workflowId }: WorkflowDesignerProps) {
       setEditDescription(workflow.description || '');
     }
   }, [workflow]);
+
+  // Initialize local positions from workflow steps
+  useEffect(() => {
+    if (workflow?.steps) {
+      const positions: StepPositions = {};
+      workflow.steps.forEach(step => {
+        positions[step.id] = { x: step.position_x, y: step.position_y };
+      });
+      setLocalPositions(positions);
+    }
+  }, [workflow?.steps]);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!canvasRef.current) return;
@@ -111,16 +143,27 @@ export function WorkflowDesigner({ workflowId }: WorkflowDesignerProps) {
       const newX = Math.max(0, Math.min(800, dragState.initialX + dx));
       const newY = Math.max(0, Math.min(400, dragState.initialY + dy));
       
-      updateStep.mutate({
-        id: dragState.stepId,
-        data: { position_x: newX, position_y: newY }
-      });
+      // Update local position only (not DB)
+      setLocalPositions(prev => ({
+        ...prev,
+        [dragState.stepId]: { x: newX, y: newY }
+      }));
     }
-  }, [dragState, updateStep]);
+  }, [dragState]);
 
   const handleMouseUp = useCallback(() => {
+    if (dragState) {
+      // Save final position to DB
+      const finalPos = localPositions[dragState.stepId];
+      if (finalPos) {
+        updateStep.mutate({
+          id: dragState.stepId,
+          data: { position_x: finalPos.x, position_y: finalPos.y }
+        });
+      }
+    }
     setDragState(null);
-  }, []);
+  }, [dragState, localPositions, updateStep]);
 
   useEffect(() => {
     if (dragState || connectionState) {
@@ -135,21 +178,24 @@ export function WorkflowDesigner({ workflowId }: WorkflowDesignerProps) {
 
   const handleStepMouseDown = (step: WorkflowStepRow, e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    const pos = localPositions[step.id] || { x: step.position_x, y: step.position_y };
     setDragState({
       stepId: step.id,
       startX: e.clientX,
       startY: e.clientY,
-      initialX: step.position_x,
-      initialY: step.position_y,
+      initialX: pos.x,
+      initialY: pos.y,
     });
   };
 
   const handleStartConnection = (step: WorkflowStepRow, e: React.MouseEvent) => {
     e.stopPropagation();
+    const pos = localPositions[step.id] || { x: step.position_x, y: step.position_y };
     setConnectionState({
       fromStepId: step.id,
-      fromX: step.position_x + 80,
-      fromY: step.position_y + 30,
+      fromX: pos.x + 80,
+      fromY: pos.y + 30,
     });
   };
 
@@ -182,7 +228,7 @@ export function WorkflowDesigner({ workflowId }: WorkflowDesignerProps) {
 
   const handleAddStatus = (statusId: string) => {
     const existingSteps = workflow?.steps || [];
-    const maxX = Math.max(100, ...existingSteps.map(s => s.position_x)) + 150;
+    const maxX = Math.max(100, ...existingSteps.map(s => localPositions[s.id]?.x ?? s.position_x)) + 150;
     
     addStep.mutate({
       workflow_id: workflowId,
@@ -190,6 +236,41 @@ export function WorkflowDesigner({ workflowId }: WorkflowDesignerProps) {
       position_x: maxX,
       position_y: 200,
     });
+  };
+
+  // Create a new status and add it to the workflow
+  const handleCreateStatus = async () => {
+    if (!newStatusName.trim()) {
+      toast.error('Status name is required');
+      return;
+    }
+    
+    try {
+      const newStatus = await createStatus.mutateAsync({
+        name: newStatusName.trim(),
+        category: newStatusCategory,
+        color: newStatusColor,
+      });
+      
+      // Add to workflow
+      const existingSteps = workflow?.steps || [];
+      const maxX = Math.max(100, ...existingSteps.map(s => localPositions[s.id]?.x ?? s.position_x)) + 150;
+      
+      addStep.mutate({
+        workflow_id: workflowId,
+        status_id: newStatus.id,
+        position_x: maxX,
+        position_y: 200,
+      });
+      
+      // Reset form
+      setNewStatusName('');
+      setNewStatusCategory('todo');
+      setNewStatusColor('#6B7280');
+      setIsCreateStatusOpen(false);
+    } catch (error) {
+      // Error already handled by the hook
+    }
   };
 
   // Set a status as the initial status (only one can be initial)
@@ -247,6 +328,11 @@ export function WorkflowDesigner({ workflowId }: WorkflowDesignerProps) {
     }
   };
 
+  // Get step position (local or from DB)
+  const getStepPosition = (step: WorkflowStepRow) => {
+    return localPositions[step.id] || { x: step.position_x, y: step.position_y };
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -289,11 +375,19 @@ export function WorkflowDesigner({ workflowId }: WorkflowDesignerProps) {
           </Button>
         </div>
         <div className="flex items-center gap-2">
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => setIsCreateStatusOpen(true)}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Create Status
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button size="sm" disabled={!availableStatuses?.length}>
                 <Plus className="h-4 w-4 mr-2" />
-                Add Status
+                Add Existing Status
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -309,6 +403,11 @@ export function WorkflowDesigner({ workflowId }: WorkflowDesignerProps) {
                   {status.name}
                 </DropdownMenuItem>
               ))}
+              {!availableStatuses?.length && (
+                <DropdownMenuItem disabled>
+                  All statuses are already in workflow
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -343,10 +442,13 @@ export function WorkflowDesigner({ workflowId }: WorkflowDesignerProps) {
               const toStep = workflow.steps.find(s => s.id === transition.to_step_id);
               if (!fromStep || !toStep) return null;
 
-              const startX = fromStep.position_x + 160;
-              const startY = fromStep.position_y + 35;
-              const endX = toStep.position_x;
-              const endY = toStep.position_y + 35;
+              const fromPos = getStepPosition(fromStep);
+              const toPos = getStepPosition(toStep);
+
+              const startX = fromPos.x + 160;
+              const startY = fromPos.y + 35;
+              const endX = toPos.x;
+              const endY = toPos.y + 35;
 
               const midX = (startX + endX) / 2;
 
@@ -406,120 +508,126 @@ export function WorkflowDesigner({ workflowId }: WorkflowDesignerProps) {
           </svg>
 
           {/* Status nodes */}
-          {workflow.steps.map(step => (
-            <ContextMenu key={step.id}>
-              <ContextMenuTrigger asChild>
-                <div
-                  className={cn(
-                    "absolute cursor-move select-none",
-                    "w-40 rounded-lg border-2 shadow-lg",
-                    getCategoryColor(step.status?.category),
-                    connectionState && connectionState.fromStepId !== step.id && "ring-2 ring-primary ring-offset-2",
-                    step.is_initial && "ring-2 ring-yellow-500"
-                  )}
-                  style={{
-                    left: step.position_x,
-                    top: step.position_y,
-                    transform: dragState?.stepId === step.id ? 'scale(1.05)' : 'scale(1)',
-                    transition: dragState?.stepId === step.id ? 'none' : 'transform 0.1s',
-                  }}
-                  onMouseDown={(e) => handleStepMouseDown(step, e)}
-                  onClick={() => handleStepClick(step)}
-                >
-                  <div className="flex items-center gap-2 p-3">
-                    <GripVertical className="h-4 w-4 opacity-50" />
-                    {getCategoryIcon(step.status?.category)}
-                    <span className="font-medium text-sm truncate flex-1">
-                      {step.status?.name}
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between px-3 pb-2 gap-1">
-                    {step.is_initial && (
-                      <Badge variant="outline" className="text-xs bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
-                        Initial
-                      </Badge>
+          {workflow.steps.map(step => {
+            const pos = getStepPosition(step);
+            const isDragging = dragState?.stepId === step.id;
+            
+            return (
+              <ContextMenu key={step.id}>
+                <ContextMenuTrigger asChild>
+                  <div
+                    className={cn(
+                      "absolute select-none",
+                      "w-40 rounded-lg border-2 shadow-lg",
+                      getCategoryColor(step.status?.category),
+                      connectionState && connectionState.fromStepId !== step.id && "ring-2 ring-primary ring-offset-2",
+                      step.is_initial && "ring-2 ring-yellow-500",
+                      isDragging ? "cursor-grabbing z-50" : "cursor-grab"
                     )}
-                    <div className="flex gap-1 ml-auto">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-6 w-6"
-                        onClick={(e) => handleStartConnection(step, e)}
-                        title="Create transition"
-                      >
-                        <ArrowRight className="h-3 w-3" />
-                      </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-6 w-6"
-                            onClick={(e) => e.stopPropagation()}
-                            title="More options"
-                          >
-                            <MoreVertical className="h-3 w-3" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSetInitialStatus(step.id);
-                            }}
-                            disabled={step.is_initial}
-                          >
-                            <Star className="h-4 w-4 mr-2" />
-                            Set as Initial Status
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-destructive focus:text-destructive"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteStep.mutate({ id: step.id, workflowId });
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Remove Status
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                    style={{
+                      left: pos.x,
+                      top: pos.y,
+                      transform: isDragging ? 'scale(1.05)' : 'scale(1)',
+                      transition: isDragging ? 'transform 0.1s' : 'transform 0.1s, left 0.05s, top 0.05s',
+                    }}
+                    onMouseDown={(e) => handleStepMouseDown(step, e)}
+                    onClick={() => handleStepClick(step)}
+                  >
+                    <div className="flex items-center gap-2 p-3">
+                      <GripVertical className="h-4 w-4 opacity-50 cursor-grab" />
+                      {getCategoryIcon(step.status?.category)}
+                      <span className="font-medium text-sm truncate flex-1">
+                        {step.status?.name}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between px-3 pb-2 gap-1">
+                      {step.is_initial && (
+                        <Badge variant="outline" className="text-xs bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
+                          Initial
+                        </Badge>
+                      )}
+                      <div className="flex gap-1 ml-auto">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6"
+                          onClick={(e) => handleStartConnection(step, e)}
+                          title="Create transition"
+                        >
+                          <ArrowRight className="h-3 w-3" />
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6"
+                              onClick={(e) => e.stopPropagation()}
+                              title="More options"
+                            >
+                              <MoreVertical className="h-3 w-3" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSetInitialStatus(step.id);
+                              }}
+                              disabled={step.is_initial}
+                            >
+                              <Star className="h-4 w-4 mr-2" />
+                              Set as Initial Status
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteStep.mutate({ id: step.id, workflowId });
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Remove Status
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </ContextMenuTrigger>
-              <ContextMenuContent>
-                <ContextMenuItem
-                  onClick={() => handleSetInitialStatus(step.id)}
-                  disabled={step.is_initial}
-                >
-                  <Star className="h-4 w-4 mr-2" />
-                  Set as Initial Status
-                </ContextMenuItem>
-                <ContextMenuItem onClick={() => handleStartConnection(step, {} as React.MouseEvent)}>
-                  <ArrowRight className="h-4 w-4 mr-2" />
-                  Create Transition
-                </ContextMenuItem>
-                <ContextMenuSeparator />
-                <ContextMenuItem
-                  className="text-destructive focus:text-destructive"
-                  onClick={() => deleteStep.mutate({ id: step.id, workflowId })}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Remove Status
-                </ContextMenuItem>
-              </ContextMenuContent>
-            </ContextMenu>
-          ))}
+                </ContextMenuTrigger>
+                <ContextMenuContent>
+                  <ContextMenuItem
+                    onClick={() => handleSetInitialStatus(step.id)}
+                    disabled={step.is_initial}
+                  >
+                    <Star className="h-4 w-4 mr-2" />
+                    Set as Initial Status
+                  </ContextMenuItem>
+                  <ContextMenuItem onClick={() => handleStartConnection(step, {} as React.MouseEvent)}>
+                    <ArrowRight className="h-4 w-4 mr-2" />
+                    Create Transition
+                  </ContextMenuItem>
+                  <ContextMenuSeparator />
+                  <ContextMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={() => deleteStep.mutate({ id: step.id, workflowId })}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Remove Status
+                  </ContextMenuItem>
+                </ContextMenuContent>
+              </ContextMenu>
+            );
+          })}
 
           {/* Instructions overlay */}
           {workflow.steps.length === 0 && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center text-muted-foreground">
                 <p className="text-lg font-medium">No statuses in workflow</p>
-                <p className="text-sm">Click "Add Status" to add statuses to this workflow</p>
+                <p className="text-sm">Click "Add Existing Status" or "Create Status" to add statuses</p>
               </div>
             </div>
           )}
@@ -587,6 +695,83 @@ export function WorkflowDesigner({ workflowId }: WorkflowDesignerProps) {
               disabled={!editName.trim() || updateWorkflow.isPending}
             >
               Save Changes
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+
+    {/* Create Status Dialog */}
+    <Dialog open={isCreateStatusOpen} onOpenChange={setIsCreateStatusOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Create New Status</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 mt-4">
+          <div className="space-y-2">
+            <Label htmlFor="status-name">Name</Label>
+            <Input
+              id="status-name"
+              value={newStatusName}
+              onChange={(e) => setNewStatusName(e.target.value)}
+              placeholder="e.g., In Review, Testing, Blocked"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="status-category">Category</Label>
+            <Select value={newStatusCategory} onValueChange={(v) => setNewStatusCategory(v as 'todo' | 'in_progress' | 'done')}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todo">
+                  <div className="flex items-center gap-2">
+                    <Circle className="h-4 w-4 text-gray-400" />
+                    To Do
+                  </div>
+                </SelectItem>
+                <SelectItem value="in_progress">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-blue-400" />
+                    In Progress
+                  </div>
+                </SelectItem>
+                <SelectItem value="done">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-400" />
+                    Done
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="status-color">Color</Label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                id="status-color"
+                value={newStatusColor}
+                onChange={(e) => setNewStatusColor(e.target.value)}
+                className="h-10 w-20 rounded border border-input cursor-pointer"
+              />
+              <Input
+                value={newStatusColor}
+                onChange={(e) => setNewStatusColor(e.target.value)}
+                placeholder="#6B7280"
+                className="flex-1"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsCreateStatusOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleCreateStatus}
+              disabled={!newStatusName.trim() || createStatus.isPending}
+            >
+              Create & Add to Workflow
             </Button>
           </div>
         </div>

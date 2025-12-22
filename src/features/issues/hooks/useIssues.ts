@@ -160,6 +160,27 @@ export function useStatuses() {
   });
 }
 
+export function useCreateStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (status: {
+      name: string;
+      category: 'todo' | 'in_progress' | 'done';
+      color?: string;
+      description?: string;
+    }) => referenceDataService.createStatus(status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['statuses'] });
+      toast.success('Status created!');
+    },
+    onError: (error) => {
+      console.error('Failed to create status:', error);
+      toast.error('Failed to create status.');
+    },
+  });
+}
+
 export function useResolutions() {
   return useQuery({
     queryKey: ['resolutions'],
