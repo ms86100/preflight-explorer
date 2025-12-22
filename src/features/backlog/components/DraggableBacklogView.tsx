@@ -66,7 +66,6 @@ import { useIssuesByProject, useStatuses, useDeleteIssue, useUpdateIssue } from 
 import { 
   useBoardsByProject, 
   useSprintsByBoard, 
-  useSprintIssues, 
   useCreateSprint, 
   useStartSprint, 
   useCompleteSprint, 
@@ -76,6 +75,7 @@ import {
   useDeleteSprint, 
   useMoveIssuesToBacklog 
 } from '@/features/boards';
+import { useQuery } from '@tanstack/react-query';
 import { SprintPlanningModal } from './SprintPlanningModal';
 import { SprintConfigModal } from './SprintConfigModal';
 import { supabase } from '@/integrations/supabase/client';
@@ -172,11 +172,30 @@ export function DraggableBacklogView() {
   const { data: sprints } = useSprintsByBoard(boardId);
   const { data: statuses } = useStatuses();
 
-  // Fetch sprint issues for each sprint
-  const sprintIssuesQueries = (sprints || []).map(sprint => 
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useSprintIssues(sprint.id)
-  );
+  // Fetch ALL sprint issues in a single query instead of per-sprint hooks
+  const sprintIds = (sprints || []).filter(s => s.state !== 'closed').map(s => s.id);
+  const { data: allSprintIssues } = useQuery({
+    queryKey: ['all-sprint-issues', sprintIds],
+    queryFn: async () => {
+      if (!sprintIds.length) return [];
+      const { data, error } = await supabase
+        .from('sprint_issues')
+        .select(`
+          sprint_id,
+          issue:issues(
+            id, issue_key, summary, story_points, classification,
+            issue_type:issue_types(name, color),
+            status:issue_statuses(name, color, category),
+            priority:priorities(name, color),
+            assignee:profiles!issues_assignee_id_fkey(display_name, avatar_url)
+          )
+        `)
+        .in('sprint_id', sprintIds);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: sprintIds.length > 0,
+  });
 
   const createSprint = useCreateSprint();
   const startSprint = useStartSprint();
@@ -209,11 +228,16 @@ export function DraggableBacklogView() {
   const sprintIssueMap = new Map<string, BacklogIssue[]>();
   const allSprintIssueIds = new Set<string>();
   
-  (sprints || []).forEach((sprint, index) => {
-    const sprintIssuesData = sprintIssuesQueries[index]?.data || [];
-    const mappedIssues = sprintIssuesData.map((si: any) => si.issue || si).filter(Boolean) as BacklogIssue[];
-    sprintIssueMap.set(sprint.id, mappedIssues);
-    mappedIssues.forEach((issue: BacklogIssue) => allSprintIssueIds.add(issue.id));
+  (allSprintIssues || []).forEach((si: any) => {
+    const sprintId = si.sprint_id;
+    const issue = si.issue as BacklogIssue | null;
+    if (!issue) return;
+    
+    if (!sprintIssueMap.has(sprintId)) {
+      sprintIssueMap.set(sprintId, []);
+    }
+    sprintIssueMap.get(sprintId)!.push(issue);
+    allSprintIssueIds.add(issue.id);
   });
 
   // Backlog issues = all issues not in any sprint
