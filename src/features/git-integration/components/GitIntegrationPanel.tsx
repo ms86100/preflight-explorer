@@ -1,9 +1,10 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GitBranch, Link as LinkIcon, Webhook, HelpCircle } from 'lucide-react';
+import { GitBranch, Link as LinkIcon, Webhook, HelpCircle, Users } from 'lucide-react';
 import { GitOrganizationForm } from './GitOrganizationForm';
 import { GitOrganizationsList } from './GitOrganizationsList';
 import { RepositoryLinker } from './RepositoryLinker';
+import { GitUserMappingManager } from './GitUserMappingManager';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export function GitIntegrationPanel() {
@@ -36,6 +37,10 @@ export function GitIntegrationPanel() {
           <TabsTrigger value="webhooks" className="gap-2">
             <Webhook className="h-4 w-4" />
             Webhooks
+          </TabsTrigger>
+          <TabsTrigger value="users" className="gap-2">
+            <Users className="h-4 w-4" />
+            User Mapping
           </TabsTrigger>
         </TabsList>
 
@@ -148,6 +153,10 @@ export function GitIntegrationPanel() {
               </Alert>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="users" className="space-y-4">
+          <GitUserMappingManager />
         </TabsContent>
       </Tabs>
     </div>

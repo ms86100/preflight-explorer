@@ -1402,6 +1402,47 @@ export type Database = {
           },
         ]
       }
+      git_user_mappings: {
+        Row: {
+          created_at: string | null
+          git_email: string
+          git_name: string | null
+          id: string
+          is_verified: boolean | null
+          organization_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          git_email: string
+          git_name?: string | null
+          id?: string
+          is_verified?: boolean | null
+          organization_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          git_email?: string
+          git_name?: string | null
+          id?: string
+          is_verified?: boolean | null
+          organization_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "git_user_mappings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "git_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_memberships: {
         Row: {
           created_at: string | null
@@ -3449,6 +3490,10 @@ export type Database = {
       is_project_member_fast: {
         Args: { _project_id: string; _user_id: string }
         Returns: boolean
+      }
+      suggest_git_user_mapping: {
+        Args: { p_git_email: string }
+        Returns: string
       }
       validate_status_transition: {
         Args: {

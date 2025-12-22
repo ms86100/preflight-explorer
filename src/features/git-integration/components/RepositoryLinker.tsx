@@ -10,6 +10,7 @@ import {
   Trash2,
   RefreshCw,
   Search,
+  Settings,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,8 +54,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useGitOrganizations } from '../hooks/useGitOrganizations';
 import { useGitRepositories, useCreateGitRepository, useUpdateGitRepository, useDeleteGitRepository } from '../hooks/useGitRepositories';
 import { useProjects } from '@/features/projects';
+import { RepositorySettingsModal } from './RepositorySettingsModal';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import type { GitRepository } from '../types';
 
 interface DiscoveredRepo {
   id: string;
@@ -79,12 +82,13 @@ type FormValues = z.infer<typeof formSchema>;
 export function RepositoryLinker() {
   const [open, setOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [settingsRepo, setSettingsRepo] = useState<GitRepository | null>(null);
   const [discoveredRepos, setDiscoveredRepos] = useState<DiscoveredRepo[]>([]);
   const [isDiscovering, setIsDiscovering] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   
   const { data: organizations } = useGitOrganizations();
-  const { data: repositories, isLoading } = useGitRepositories();
+  const { data: repositories, isLoading, refetch } = useGitRepositories();
   const { data: projects } = useProjects();
   const createRepo = useCreateGitRepository();
   const updateRepo = useUpdateGitRepository();
@@ -458,7 +462,7 @@ export function RepositoryLinker() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2">
                     <Switch
                       checked={repo.smartcommits_enabled ?? true}
@@ -468,9 +472,17 @@ export function RepositoryLinker() {
                   </div>
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="icon"
+                    onClick={() => setSettingsRepo(repo as unknown as GitRepository)}
+                    className="h-8 w-8"
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => setDeleteId(repo.id)}
-                    className="text-destructive hover:text-destructive"
+                    className="h-8 w-8 text-destructive hover:text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -504,6 +516,13 @@ export function RepositoryLinker() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <RepositorySettingsModal
+        open={!!settingsRepo}
+        onOpenChange={(open) => !open && setSettingsRepo(null)}
+        repository={settingsRepo}
+        onSuccess={() => refetch()}
+      />
     </>
   );
 }
