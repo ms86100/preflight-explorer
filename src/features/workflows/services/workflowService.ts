@@ -73,8 +73,23 @@ export interface WorkflowWithDetails extends WorkflowRow {
   transitions: WorkflowTransitionRow[];
 }
 
+/** Database transition row before type casting */
+interface DbTransitionRow {
+  id: string;
+  workflow_id: string;
+  from_step_id: string;
+  to_step_id: string;
+  name: string;
+  description: string | null;
+  conditions: unknown;
+  validators: unknown;
+  post_functions: unknown;
+  screen_id: string | null;
+  created_at: string;
+}
+
 // Helper to cast DB transition row to typed interface
-function castTransition(t: any): WorkflowTransitionRow {
+function castTransition(t: DbTransitionRow): WorkflowTransitionRow {
   return {
     ...t,
     conditions: (Array.isArray(t.conditions) ? t.conditions : []) as TransitionCondition[],
