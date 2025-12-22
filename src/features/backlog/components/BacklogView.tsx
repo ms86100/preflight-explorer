@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Plus,
@@ -16,6 +16,12 @@ import {
   Bookmark,
   Layers,
   Loader2,
+  Trash2,
+  Eye,
+  UserPlus,
+  ArrowRight,
+  Pencil,
+  ArrowLeftRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,21 +31,43 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AppLayout } from '@/components/layout';
 import { ClassificationBadge } from '@/components/compliance/ClassificationBanner';
-import { CreateIssueModal } from '@/features/issues';
+import { CreateIssueModal, IssueDetailModal } from '@/features/issues';
 import { useProject } from '@/features/projects';
-import { useIssuesByProject, useStatuses } from '@/features/issues';
-import { useBoardsByProject, useSprintsByBoard, useSprintIssues, useCreateSprint, useStartSprint, useCompleteSprint } from '@/features/boards';
+import { useIssuesByProject, useStatuses, useDeleteIssue, useUpdateIssue } from '@/features/issues';
+import { useBoardsByProject, useSprintsByBoard, useSprintIssues, useCreateSprint, useStartSprint, useCompleteSprint, useAddIssueToSprint, useRemoveIssueFromSprint, useUpdateSprint, useDeleteSprint, useMoveIssuesToBacklog } from '@/features/boards';
 import { SprintPlanningModal } from './SprintPlanningModal';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import type { ClassificationLevel, SprintState } from '@/types/jira';
 
 const ISSUE_TYPE_ICONS: Record<string, typeof Bug> = {
@@ -81,6 +109,12 @@ interface SprintSection {
   issues: BacklogIssue[];
 }
 
+interface TeamMember {
+  id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+}
+
 export function BacklogView() {
   const { projectKey } = useParams<{ projectKey: string }>();
   const [searchQuery, setSearchQuery] = useState('');
@@ -89,6 +123,28 @@ export function BacklogView() {
   const [isCreateIssueOpen, setIsCreateIssueOpen] = useState(false);
   const [isSprintPlanningOpen, setIsSprintPlanningOpen] = useState(false);
   const [createIssueContext, setCreateIssueContext] = useState<string | undefined>();
+  
+  // Issue detail modal state
+  const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  
+  // Delete confirmation state
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [issueToDelete, setIssueToDelete] = useState<{ id: string; key: string } | null>(null);
+  
+  // Assignee selection state
+  const [assigneeDialogOpen, setAssigneeDialogOpen] = useState(false);
+  const [issueToAssign, setIssueToAssign] = useState<{ id: string; key: string } | null>(null);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+  
+  // Sprint action state
+  const [sprintDeleteConfirmOpen, setSprintDeleteConfirmOpen] = useState(false);
+  const [sprintToDelete, setSprintToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [editSprintDialogOpen, setEditSprintDialogOpen] = useState(false);
+  const [sprintToEdit, setSprintToEdit] = useState<{ id: string; name: string; goal: string | null } | null>(null);
+  const [editSprintName, setEditSprintName] = useState('');
+  const [editSprintGoal, setEditSprintGoal] = useState('');
 
   const { data: project, isLoading: projectLoading } = useProject(projectKey || '');
   const { data: issues, isLoading: issuesLoading } = useIssuesByProject(project?.id || '');
@@ -99,8 +155,28 @@ export function BacklogView() {
   const createSprint = useCreateSprint();
   const startSprint = useStartSprint();
   const completeSprint = useCompleteSprint();
+  const deleteIssue = useDeleteIssue();
+  const updateIssue = useUpdateIssue();
+  const addIssueToSprint = useAddIssueToSprint();
+  const updateSprint = useUpdateSprint();
+  const deleteSprint = useDeleteSprint();
+  const moveIssuesToBacklog = useMoveIssuesToBacklog();
 
   const isLoading = projectLoading || issuesLoading;
+
+  // Fetch team members when assignee dialog opens
+  useEffect(() => {
+    if (assigneeDialogOpen && project?.id) {
+      setLoadingMembers(true);
+      supabase
+        .from('profiles')
+        .select('id, display_name, avatar_url')
+        .then(({ data }) => {
+          setTeamMembers(data || []);
+          setLoadingMembers(false);
+        });
+    }
+  }, [assigneeDialogOpen, project?.id]);
 
   // Group issues by sprint
   const backlogIssues = issues?.filter(issue => {
@@ -257,11 +333,71 @@ export function BacklogView() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>View details</DropdownMenuItem>
-            <DropdownMenuItem>Add to sprint</DropdownMenuItem>
-            <DropdownMenuItem>Change assignee</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => {
+              setSelectedIssueId(issue.id);
+              setIsDetailModalOpen(true);
+            }}>
+              <Eye className="h-4 w-4 mr-2" />
+              View details
+            </DropdownMenuItem>
+            
+            {sprints && sprints.filter(s => s.state !== 'closed').length > 0 ? (
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <ArrowRight className="h-4 w-4 mr-2" />
+                  Add to sprint
+                </DropdownMenuSubTrigger>
+                <DropdownMenuPortal>
+                  <DropdownMenuSubContent>
+                    {sprints.filter(s => s.state !== 'closed').map(sprint => (
+                      <DropdownMenuItem 
+                        key={sprint.id}
+                        onClick={async () => {
+                          try {
+                            await addIssueToSprint.mutateAsync({ sprintId: sprint.id, issueId: issue.id });
+                            toast.success(`Added ${issue.issue_key} to ${sprint.name}`);
+                          } catch (error) {
+                            toast.error('Failed to add issue to sprint');
+                          }
+                        }}
+                      >
+                        {sprint.name}
+                        {sprint.state === 'active' && (
+                          <span className="ml-2 text-xs text-muted-foreground">(active)</span>
+                        )}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuPortal>
+              </DropdownMenuSub>
+            ) : (
+              <DropdownMenuItem disabled>
+                <ArrowRight className="h-4 w-4 mr-2" />
+                Add to sprint
+                <span className="ml-2 text-xs text-muted-foreground">(no sprints)</span>
+              </DropdownMenuItem>
+            )}
+            
+            <DropdownMenuItem onClick={() => {
+              setIssueToAssign({ id: issue.id, key: issue.issue_key });
+              setAssigneeDialogOpen(true);
+            }}>
+              <UserPlus className="h-4 w-4 mr-2" />
+              Change assignee
+            </DropdownMenuItem>
+            
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+            
+            <DropdownMenuItem 
+              className="text-destructive"
+              onClick={() => {
+                setIssueToDelete({ id: issue.id, key: issue.issue_key });
+                setDeleteConfirmOpen(true);
+              }}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -321,10 +457,32 @@ export function BacklogView() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem>Edit sprint</DropdownMenuItem>
-                  <DropdownMenuItem>Move issues to backlog</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => {
+                    setSprintToEdit({ id: sprint.id, name: sprint.name, goal: sprint.goal });
+                    setEditSprintName(sprint.name);
+                    setEditSprintGoal(sprint.goal || '');
+                    setEditSprintDialogOpen(true);
+                  }}>
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Edit sprint
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={async () => {
+                    await moveIssuesToBacklog.mutateAsync(sprint.id);
+                  }}>
+                    <ArrowLeftRight className="h-4 w-4 mr-2" />
+                    Move issues to backlog
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-destructive">Delete sprint</DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="text-destructive"
+                    onClick={() => {
+                      setSprintToDelete({ id: sprint.id, name: sprint.name });
+                      setSprintDeleteConfirmOpen(true);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete sprint
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -457,6 +615,174 @@ export function BacklogView() {
           </div>
         </div>
       </AppLayout>
+
+      {/* Issue Detail Modal */}
+      <IssueDetailModal
+        issueId={selectedIssueId}
+        open={isDetailModalOpen}
+        onOpenChange={setIsDetailModalOpen}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Issue</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{issueToDelete?.key}</strong>? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                if (issueToDelete) {
+                  await deleteIssue.mutateAsync(issueToDelete.id);
+                  setIssueToDelete(null);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Assignee Selection Dialog */}
+      <Dialog open={assigneeDialogOpen} onOpenChange={setAssigneeDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Assignee for {issueToAssign?.key}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 max-h-[300px] overflow-y-auto">
+            {loadingMembers ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={async () => {
+                    if (issueToAssign) {
+                      await updateIssue.mutateAsync({ 
+                        id: issueToAssign.id, 
+                        updates: { assignee_id: null } 
+                      });
+                      setAssigneeDialogOpen(false);
+                      setIssueToAssign(null);
+                    }
+                  }}
+                >
+                  <div className="w-8 h-8 rounded-full border-2 border-dashed border-muted-foreground/30 mr-3" />
+                  Unassigned
+                </Button>
+                {teamMembers.map(member => (
+                  <Button
+                    key={member.id}
+                    variant="ghost"
+                    className="w-full justify-start"
+                    onClick={async () => {
+                      if (issueToAssign) {
+                        await updateIssue.mutateAsync({ 
+                          id: issueToAssign.id, 
+                          updates: { assignee_id: member.id } 
+                        });
+                        setAssigneeDialogOpen(false);
+                        setIssueToAssign(null);
+                      }
+                    }}
+                  >
+                    <Avatar className="h-8 w-8 mr-3">
+                      <AvatarImage src={member.avatar_url || ''} />
+                      <AvatarFallback className="text-xs">
+                        {member.display_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?'}
+                      </AvatarFallback>
+                    </Avatar>
+                    {member.display_name || 'Unknown'}
+                  </Button>
+                ))}
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Sprint Delete Confirmation */}
+      <AlertDialog open={sprintDeleteConfirmOpen} onOpenChange={setSprintDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Sprint</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{sprintToDelete?.name}</strong>? All issues will be moved to the backlog.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                if (sprintToDelete) {
+                  await deleteSprint.mutateAsync(sprintToDelete.id);
+                  setSprintToDelete(null);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Edit Sprint Dialog */}
+      <Dialog open={editSprintDialogOpen} onOpenChange={setEditSprintDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Sprint</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Name</label>
+              <Input
+                value={editSprintName}
+                onChange={(e) => setEditSprintName(e.target.value)}
+                placeholder="Sprint name"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Goal</label>
+              <Input
+                value={editSprintGoal}
+                onChange={(e) => setEditSprintGoal(e.target.value)}
+                placeholder="Sprint goal (optional)"
+                className="mt-1"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setEditSprintDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={async () => {
+                  if (sprintToEdit) {
+                    await updateSprint.mutateAsync({
+                      id: sprintToEdit.id,
+                      updates: { name: editSprintName, goal: editSprintGoal || null }
+                    });
+                    setEditSprintDialogOpen(false);
+                    setSprintToEdit(null);
+                  }
+                }}
+              >
+                Save
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

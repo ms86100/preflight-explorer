@@ -177,6 +177,42 @@ export const sprintService = {
     return data as SprintRow;
   },
 
+  async update(id: string, updates: { name?: string; goal?: string; start_date?: string; end_date?: string }) {
+    const { data, error } = await supabase
+      .from('sprints')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data as SprintRow;
+  },
+
+  async delete(id: string) {
+    // First remove all issues from the sprint
+    await supabase
+      .from('sprint_issues')
+      .delete()
+      .eq('sprint_id', id);
+
+    const { error } = await supabase
+      .from('sprints')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+  },
+
+  async moveAllIssuesToBacklog(sprintId: string) {
+    const { error } = await supabase
+      .from('sprint_issues')
+      .delete()
+      .eq('sprint_id', sprintId);
+
+    if (error) throw error;
+  },
+
   async addIssue(sprintId: string, issueId: string) {
     const { error } = await supabase
       .from('sprint_issues')
