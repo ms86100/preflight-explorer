@@ -23,3 +23,9 @@ verify_jwt = false
 
 [functions.git-oauth]
 verify_jwt = false
+
+[functions.git-api]
+verify_jwt = false
+
+[functions.git-sync]
+verify_jwt = false
