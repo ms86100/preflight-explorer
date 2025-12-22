@@ -2706,34 +2706,50 @@ export type Database = {
         Row: {
           created_at: string | null
           description: string | null
+          draft_of: string | null
           id: string
           is_active: boolean | null
           is_default: boolean | null
+          is_draft: boolean | null
           name: string
           project_id: string | null
+          published_at: string | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           description?: string | null
+          draft_of?: string | null
           id?: string
           is_active?: boolean | null
           is_default?: boolean | null
+          is_draft?: boolean | null
           name: string
           project_id?: string | null
+          published_at?: string | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           description?: string | null
+          draft_of?: string | null
           id?: string
           is_active?: boolean | null
           is_default?: boolean | null
+          is_draft?: boolean | null
           name?: string
           project_id?: string | null
+          published_at?: string | null
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "workflows_draft_of_fkey"
+            columns: ["draft_of"]
+            isOneToOne: false
+            referencedRelation: "workflows"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "workflows_project_id_fkey"
             columns: ["project_id"]
