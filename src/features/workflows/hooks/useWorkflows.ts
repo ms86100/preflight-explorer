@@ -2,10 +2,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import * as workflowService from '../services/workflowService';
 
-export function useWorkflows(projectId?: string) {
+export function useWorkflows(projectId?: string, includeDrafts = true) {
   return useQuery({
-    queryKey: ['workflows', projectId],
-    queryFn: () => workflowService.getWorkflows(projectId),
+    queryKey: ['workflows', projectId, includeDrafts],
+    queryFn: () => workflowService.getWorkflows(projectId, includeDrafts),
   });
 }
 
@@ -182,6 +182,64 @@ export function useDeleteWorkflowTransition() {
     },
     onError: (error: Error) => {
       toast.error('Failed to remove transition: ' + error.message);
+    },
+  });
+}
+
+// ============= Draft Workflow Hooks =============
+
+export function useWorkflowDraft(workflowId: string) {
+  return useQuery({
+    queryKey: ['workflow', workflowId, 'draft'],
+    queryFn: () => workflowService.getWorkflowDraft(workflowId),
+    enabled: !!workflowId,
+  });
+}
+
+export function useCreateWorkflowDraft() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: workflowService.createWorkflowDraft,
+    onSuccess: (draft) => {
+      queryClient.invalidateQueries({ queryKey: ['workflows'] });
+      queryClient.invalidateQueries({ queryKey: ['workflow', draft.draft_of, 'draft'] });
+      toast.success('Draft created - you can now edit without affecting the live workflow');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to create draft: ' + error.message);
+    },
+  });
+}
+
+export function usePublishWorkflowDraft() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: workflowService.publishWorkflowDraft,
+    onSuccess: (workflow) => {
+      queryClient.invalidateQueries({ queryKey: ['workflows'] });
+      queryClient.invalidateQueries({ queryKey: ['workflow'] });
+      toast.success('Draft published successfully');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to publish draft: ' + error.message);
+    },
+  });
+}
+
+export function useDiscardWorkflowDraft() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: workflowService.discardWorkflowDraft,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workflows'] });
+      queryClient.invalidateQueries({ queryKey: ['workflow'] });
+      toast.success('Draft discarded');
+    },
+    onError: (error: Error) => {
+      toast.error('Failed to discard draft: ' + error.message);
     },
   });
 }

@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import { useWorkflows, useCreateWorkflow, useDeleteWorkflow, useCloneWorkflow } from '../hooks/useWorkflows';
+import { 
+  useWorkflows, 
+  useCreateWorkflow, 
+  useDeleteWorkflow, 
+  useCloneWorkflow,
+  useWorkflowDraft,
+  useCreateWorkflowDraft,
+  usePublishWorkflowDraft,
+  useDiscardWorkflowDraft
+} from '../hooks/useWorkflows';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +20,11 @@ import {
   Settings,
   Copy,
   MoreVertical,
-  GitCompare
+  GitCompare,
+  FileEdit,
+  Upload,
+  X,
+  PenSquare
 } from 'lucide-react';
 import {
   Dialog,
@@ -27,6 +40,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -44,9 +67,15 @@ export function WorkflowList({ projectId, onSelectWorkflow, selectedWorkflowId }
   const createWorkflow = useCreateWorkflow();
   const deleteWorkflow = useDeleteWorkflow();
   const cloneWorkflow = useCloneWorkflow();
+  const createDraft = useCreateWorkflowDraft();
+  const publishDraft = usePublishWorkflowDraft();
+  const discardDraft = useDiscardWorkflowDraft();
+  
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isCloneOpen, setIsCloneOpen] = useState(false);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
+  const [publishConfirmId, setPublishConfirmId] = useState<string | null>(null);
+  const [discardConfirmId, setDiscardConfirmId] = useState<string | null>(null);
   const [cloneSourceId, setCloneSourceId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -85,6 +114,31 @@ export function WorkflowList({ projectId, onSelectWorkflow, selectedWorkflowId }
     setCloneSourceId(workflowId);
     setName(`${workflowName} (Copy)`);
     setIsCloneOpen(true);
+  };
+
+  const handleCreateDraft = (workflowId: string) => {
+    createDraft.mutate(workflowId, {
+      onSuccess: (draft) => {
+        onSelectWorkflow(draft.id);
+      }
+    });
+  };
+
+  const handlePublishDraft = (draftId: string) => {
+    publishDraft.mutate(draftId, {
+      onSuccess: (workflow) => {
+        onSelectWorkflow(workflow.id);
+        setPublishConfirmId(null);
+      }
+    });
+  };
+
+  const handleDiscardDraft = (draftId: string) => {
+    discardDraft.mutate(draftId, {
+      onSuccess: () => {
+        setDiscardConfirmId(null);
+      }
+    });
   };
 
   if (isLoading) {
@@ -195,6 +249,12 @@ export function WorkflowList({ projectId, onSelectWorkflow, selectedWorkflowId }
                           Default
                         </Badge>
                       )}
+                      {(workflow as any).is_draft && (
+                        <Badge variant="outline" className="text-xs bg-yellow-500/20 text-yellow-600 border-yellow-500/30">
+                          <PenSquare className="h-3 w-3 mr-1" />
+                          Draft
+                        </Badge>
+                      )}
                     </div>
                     {workflow.description && (
                       <p className="text-sm text-muted-foreground line-clamp-1">
@@ -215,28 +275,65 @@ export function WorkflowList({ projectId, onSelectWorkflow, selectedWorkflowId }
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openCloneDialog(workflow.id, workflow.name);
-                      }}
-                    >
-                      <Copy className="h-4 w-4 mr-2" />
-                      Clone Workflow
-                    </DropdownMenuItem>
-                    {!workflow.is_default && (
+                    {/* Draft actions for draft workflows */}
+                    {(workflow as any).is_draft ? (
                       <>
-                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPublishConfirmId(workflow.id);
+                          }}
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          Publish Draft
+                        </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-destructive focus:text-destructive"
                           onClick={(e) => {
                             e.stopPropagation();
-                            deleteWorkflow.mutate(workflow.id);
+                            setDiscardConfirmId(workflow.id);
                           }}
                         >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete Workflow
+                          <X className="h-4 w-4 mr-2" />
+                          Discard Draft
                         </DropdownMenuItem>
+                      </>
+                    ) : (
+                      <>
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCreateDraft(workflow.id);
+                          }}
+                          disabled={createDraft.isPending}
+                        >
+                          <FileEdit className="h-4 w-4 mr-2" />
+                          Create Draft
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openCloneDialog(workflow.id, workflow.name);
+                          }}
+                        >
+                          <Copy className="h-4 w-4 mr-2" />
+                          Clone Workflow
+                        </DropdownMenuItem>
+                        {!workflow.is_default && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteWorkflow.mutate(workflow.id);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete Workflow
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </>
                     )}
                   </DropdownMenuContent>
@@ -294,6 +391,51 @@ export function WorkflowList({ projectId, onSelectWorkflow, selectedWorkflowId }
       onOpenChange={setIsCompareOpen}
       initialWorkflowId={selectedWorkflowId}
     />
+
+    {/* Publish Draft Confirmation */}
+    <AlertDialog open={!!publishConfirmId} onOpenChange={(open) => !open && setPublishConfirmId(null)}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Publish Draft?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This will replace the live workflow with all changes from this draft. 
+            The draft will be deleted after publishing. This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={() => publishConfirmId && handlePublishDraft(publishConfirmId)}
+            disabled={publishDraft.isPending}
+          >
+            {publishDraft.isPending ? 'Publishing...' : 'Publish Draft'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    {/* Discard Draft Confirmation */}
+    <AlertDialog open={!!discardConfirmId} onOpenChange={(open) => !open && setDiscardConfirmId(null)}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Discard Draft?</AlertDialogTitle>
+          <AlertDialogDescription>
+            All changes in this draft will be permanently deleted. 
+            The original workflow will remain unchanged. This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={() => discardConfirmId && handleDiscardDraft(discardConfirmId)}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            disabled={discardDraft.isPending}
+          >
+            {discardDraft.isPending ? 'Discarding...' : 'Discard Draft'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     </>
   );
 }
