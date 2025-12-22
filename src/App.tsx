@@ -21,6 +21,7 @@ import ProjectSettingsPage from "./pages/ProjectSettingsPage";
 import PluginsPage from "./pages/PluginsPage";
 import AutomationPage from "./pages/AutomationPage";
 import MigrationPage from "./pages/MigrationPage";
+import LdapPage from "./pages/LdapPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -278,6 +279,16 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <MigrationPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* LDAP */}
+      <Route
+        path="/ldap"
+        element={
+          <ProtectedRoute>
+            <LdapPage />
           </ProtectedRoute>
         }
       />
