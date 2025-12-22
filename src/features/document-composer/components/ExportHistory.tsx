@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,54 +15,47 @@ import {
   FileText, Table as TableIcon, FileType, Download, 
   CheckCircle, Clock, AlertCircle, Trash2, RefreshCw
 } from 'lucide-react';
-import type { ExportJob, ExportFormat } from '../types';
+import { toast } from 'sonner';
+import { getExports, deleteExport, downloadExport } from '../services/documentComposerService';
+import type { ExportJob } from '../types';
 
 export function ExportHistory() {
-  const [exports] = useState<ExportJob[]>([
-    {
-      id: '1',
-      status: 'completed',
-      format: 'pdf',
-      issueCount: 15,
-      progress: 100,
-      fileUrl: '#',
-      created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-      completed_at: new Date(Date.now() - 1000 * 60 * 28).toISOString(),
+  const queryClient = useQueryClient();
+  
+  const { data: exports = [], isLoading } = useQuery({
+    queryKey: ['document-exports'],
+    queryFn: getExports,
+    refetchInterval: 3000, // Poll for status updates
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteExport,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['document-exports'] });
+      toast.success('Export deleted');
     },
-    {
-      id: '2',
-      status: 'completed',
-      format: 'xlsx',
-      issueCount: 42,
-      progress: 100,
-      fileUrl: '#',
-      created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-      completed_at: new Date(Date.now() - 1000 * 60 * 60 * 2 + 1000 * 60).toISOString(),
+    onError: () => {
+      toast.error('Failed to delete export');
     },
-    {
-      id: '3',
-      status: 'failed',
-      format: 'docx',
-      issueCount: 8,
-      progress: 45,
-      error: 'Export timeout - too many attachments',
-      created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-    },
-    {
-      id: '4',
-      status: 'processing',
-      format: 'pdf',
-      issueCount: 23,
-      progress: 67,
-      created_at: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-    },
-  ]);
+  });
+
+  const handleDownload = async (exportJob: ExportJob) => {
+    try {
+      await downloadExport(exportJob);
+      toast.success('Download started');
+    } catch (error) {
+      toast.error('Download failed');
+      console.error('Download error:', error);
+    }
+  };
 
   const formatIcons: Record<string, React.ReactNode> = {
     pdf: <FileText className="h-4 w-4 text-red-500" />,
     xlsx: <TableIcon className="h-4 w-4 text-green-500" />,
     docx: <FileType className="h-4 w-4 text-blue-500" />,
     html: <FileText className="h-4 w-4 text-orange-500" />,
+    csv: <TableIcon className="h-4 w-4 text-green-600" />,
+    json: <FileText className="h-4 w-4 text-yellow-500" />,
   };
 
   const statusConfig: Record<ExportJob['status'], { icon: React.ReactNode; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
@@ -75,6 +69,24 @@ export function ExportHistory() {
     const date = new Date(dateStr);
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
+
+  const formatFileSize = (bytes?: number) => {
+    if (!bytes) return '-';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center">
+          <RefreshCw className="h-8 w-8 mx-auto mb-4 text-muted-foreground animate-spin" />
+          <p className="text-muted-foreground">Loading export history...</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (exports.length === 0) {
     return (
@@ -95,8 +107,10 @@ export function ExportHistory() {
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead>Name</TableHead>
             <TableHead>Format</TableHead>
             <TableHead>Items</TableHead>
+            <TableHead>Size</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Created</TableHead>
             <TableHead className="text-right">Actions</TableHead>
@@ -105,16 +119,22 @@ export function ExportHistory() {
         <TableBody>
           {exports.map((exportJob) => (
             <TableRow key={exportJob.id}>
+              <TableCell className="font-medium">
+                {exportJob.name || 'Untitled Export'}
+              </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
-                  {formatIcons[exportJob.format]}
+                  {formatIcons[exportJob.format] || <FileText className="h-4 w-4" />}
                   <span className="uppercase text-sm font-medium">{exportJob.format}</span>
                 </div>
               </TableCell>
-              <TableCell>{exportJob.issueCount} items</TableCell>
+              <TableCell>{exportJob.issueCount || exportJob.issue_ids?.length || 0} items</TableCell>
+              <TableCell className="text-sm text-muted-foreground">
+                {formatFileSize(exportJob.file_size)}
+              </TableCell>
               <TableCell>
-                <Badge variant={statusConfig[exportJob.status].variant} className="gap-1">
-                  {statusConfig[exportJob.status].icon}
+                <Badge variant={statusConfig[exportJob.status]?.variant || 'outline'} className="gap-1">
+                  {statusConfig[exportJob.status]?.icon}
                   <span className="capitalize">{exportJob.status}</span>
                 </Badge>
                 {exportJob.status === 'processing' && (
@@ -130,7 +150,11 @@ export function ExportHistory() {
               <TableCell className="text-right">
                 <div className="flex justify-end gap-1">
                   {exportJob.status === 'completed' && (
-                    <Button variant="ghost" size="sm">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleDownload(exportJob)}
+                    >
                       <Download className="h-4 w-4" />
                     </Button>
                   )}
@@ -139,7 +163,13 @@ export function ExportHistory() {
                       <RefreshCw className="h-4 w-4" />
                     </Button>
                   )}
-                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => deleteMutation.mutate(exportJob.id)}
+                    disabled={deleteMutation.isPending}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>

@@ -1,6 +1,6 @@
 // Document Composer types
 
-export type ExportFormat = 'pdf' | 'xlsx' | 'docx' | 'html';
+export type ExportFormat = 'pdf' | 'xlsx' | 'docx' | 'html' | 'csv' | 'json';
 
 export interface DocumentTemplate {
   id: string;
@@ -88,6 +88,8 @@ export const FORMAT_LABELS: Record<ExportFormat, string> = {
   xlsx: 'Excel Spreadsheet',
   docx: 'Word Document',
   html: 'HTML Document',
+  csv: 'CSV File',
+  json: 'JSON File',
 };
 
 export const FORMAT_ICONS: Record<ExportFormat, string> = {
@@ -95,4 +97,6 @@ export const FORMAT_ICONS: Record<ExportFormat, string> = {
   xlsx: 'Table',
   docx: 'FileType',
   html: 'Code',
+  csv: 'Table',
+  json: 'FileText',
 };
