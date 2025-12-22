@@ -464,6 +464,81 @@ export function validateCachedQueryRequest(body: unknown): ValidationResult<{
 }
 
 /**
+ * Validates git-sync request
+ */
+export function validateGitSyncRequest(body: unknown): ValidationResult<{
+  action?: 'sync' | 'sync_all' | 'get_status';
+  organization_id?: string;
+  repository_id?: string;
+}> {
+  const errors: ValidationError[] = [];
+  
+  if (!body || typeof body !== 'object') {
+    return { success: false, errors: [{ field: 'body', message: 'Request body must be an object' }] };
+  }
+
+  const data = body as Record<string, unknown>;
+  
+  // Validate action
+  const validActions = ['sync', 'sync_all', 'get_status'] as const;
+  if (data.action !== undefined && !isOneOf(data.action, validActions)) {
+    errors.push({ field: 'action', message: 'Action must be one of: sync, sync_all, get_status' });
+  }
+
+  // Validate UUIDs if present
+  if (data.organization_id !== undefined && !isValidUuid(data.organization_id)) {
+    errors.push({ field: 'organization_id', message: 'Invalid UUID format' });
+  }
+  if (data.repository_id !== undefined && !isValidUuid(data.repository_id)) {
+    errors.push({ field: 'repository_id', message: 'Invalid UUID format' });
+  }
+
+  if (errors.length > 0) {
+    return { success: false, errors };
+  }
+
+  return {
+    success: true,
+    data: {
+      action: data.action as 'sync' | 'sync_all' | 'get_status' | undefined,
+      organization_id: data.organization_id as string | undefined,
+      repository_id: data.repository_id as string | undefined,
+    }
+  };
+}
+
+/**
+ * Validates git-demo-seed request
+ */
+export function validateGitDemoSeedRequest(body: unknown): ValidationResult<{
+  action: 'seed' | 'cleanup';
+}> {
+  const errors: ValidationError[] = [];
+  
+  if (!body || typeof body !== 'object') {
+    return { success: false, errors: [{ field: 'body', message: 'Request body must be an object' }] };
+  }
+
+  const data = body as Record<string, unknown>;
+  
+  const validActions = ['seed', 'cleanup'] as const;
+  if (!isOneOf(data.action, validActions)) {
+    errors.push({ field: 'action', message: 'Action must be one of: seed, cleanup' });
+  }
+
+  if (errors.length > 0) {
+    return { success: false, errors };
+  }
+
+  return {
+    success: true,
+    data: {
+      action: data.action as 'seed' | 'cleanup',
+    }
+  };
+}
+
+/**
  * Validates background jobs request
  */
 export function validateBackgroundJobsRequest(body: unknown): ValidationResult<{
