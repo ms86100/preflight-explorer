@@ -221,6 +221,65 @@ async function createGitLabBranch(
   };
 }
 
+// Create a branch in Bitbucket
+async function createBitbucketBranch(
+  accessToken: string,
+  workspace: string,
+  repoSlug: string,
+  branchName: string,
+  fromBranch: string
+): Promise<{ success: boolean; web_url?: string; error?: string }> {
+  // First get the commit hash of the source branch
+  const refResponse = await fetch(
+    `https://api.bitbucket.org/2.0/repositories/${workspace}/${repoSlug}/refs/branches/${fromBranch}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  if (!refResponse.ok) {
+    return { success: false, error: `Source branch not found: ${fromBranch}` };
+  }
+
+  const refData = await refResponse.json();
+  const commitHash = refData.target?.hash;
+
+  if (!commitHash) {
+    return { success: false, error: 'Could not get commit hash from source branch' };
+  }
+
+  // Create the new branch
+  const createResponse = await fetch(
+    `https://api.bitbucket.org/2.0/repositories/${workspace}/${repoSlug}/refs/branches`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: branchName,
+        target: {
+          hash: commitHash,
+        },
+      }),
+    }
+  );
+
+  if (!createResponse.ok) {
+    const errorData = await createResponse.json();
+    return { success: false, error: errorData.error?.message || 'Failed to create branch' };
+  }
+
+  const branchData = await createResponse.json();
+  return {
+    success: true,
+    web_url: branchData.links?.html?.href || `https://bitbucket.org/${workspace}/${repoSlug}/branch/${branchName}`,
+  };
+}
+
 // Create a pull request in GitHub
 async function createGitHubPR(
   accessToken: string,
@@ -299,6 +358,54 @@ async function createGitLabMR(
     success: true,
     web_url: mrData.web_url,
     mr_id: String(mrData.iid),
+  };
+}
+
+// Create a pull request in Bitbucket
+async function createBitbucketPR(
+  accessToken: string,
+  workspace: string,
+  repoSlug: string,
+  title: string,
+  description: string,
+  sourceBranch: string,
+  destinationBranch: string
+): Promise<{ success: boolean; web_url?: string; pr_id?: string; error?: string }> {
+  const response = await fetch(
+    `https://api.bitbucket.org/2.0/repositories/${workspace}/${repoSlug}/pullrequests`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title,
+        description,
+        source: {
+          branch: {
+            name: sourceBranch,
+          },
+        },
+        destination: {
+          branch: {
+            name: destinationBranch,
+          },
+        },
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    return { success: false, error: errorData.error?.message || 'Failed to create PR' };
+  }
+
+  const prData = await response.json();
+  return {
+    success: true,
+    web_url: prData.links?.html?.href,
+    pr_id: String(prData.id),
   };
 }
 
@@ -450,6 +557,10 @@ Deno.serve(async (req) => {
         result = await createGitHubBranch(org.access_token_encrypted, owner, repo, branch_name, from_branch);
       } else if (org.provider_type === 'gitlab') {
         result = await createGitLabBranch(org.host_url, org.access_token_encrypted, repository_slug, branch_name, from_branch);
+      } else if (org.provider_type === 'bitbucket') {
+        // Bitbucket slug format: workspace/repo-slug
+        const [workspace, repoSlug] = repository_slug.split('/');
+        result = await createBitbucketBranch(org.access_token_encrypted, workspace, repoSlug, branch_name, from_branch);
       } else {
         return new Response(
           JSON.stringify({ error: 'Branch creation not supported for this provider' }),
@@ -488,6 +599,9 @@ Deno.serve(async (req) => {
         result = await createGitHubPR(org.access_token_encrypted, owner, repo, title, body, head_branch, base_branch);
       } else if (org.provider_type === 'gitlab') {
         result = await createGitLabMR(org.host_url, org.access_token_encrypted, repository_slug, title, body, head_branch, base_branch);
+      } else if (org.provider_type === 'bitbucket') {
+        const [workspace, repoSlug] = repository_slug.split('/');
+        result = await createBitbucketPR(org.access_token_encrypted, workspace, repoSlug, title, body, head_branch, base_branch);
       } else {
         return new Response(
           JSON.stringify({ error: 'PR creation not supported for this provider' }),

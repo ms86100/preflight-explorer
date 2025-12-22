@@ -29,3 +29,4 @@ export { CreatePRModal } from './components/CreatePRModal';
 export { TriggerBuildModal } from './components/TriggerBuildModal';
 export { RepositorySettingsModal } from './components/RepositorySettingsModal';
 export { SyncStatusIndicator, SyncStatusBadge } from './components/SyncStatusIndicator';
+export { GitUserMappingManager } from './components/GitUserMappingManager';
