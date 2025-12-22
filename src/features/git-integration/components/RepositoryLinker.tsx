@@ -1,24 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { 
   Loader2, 
   Link as LinkIcon, 
-  Unlink, 
   ExternalLink,
   GitBranch,
   Trash2,
+  RefreshCw,
+  Search,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -49,19 +49,28 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useGitOrganizations } from '../hooks/useGitOrganizations';
 import { useGitRepositories, useCreateGitRepository, useUpdateGitRepository, useDeleteGitRepository } from '../hooks/useGitRepositories';
 import { useProjects } from '@/features/projects';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
+interface DiscoveredRepo {
+  id: string;
+  name: string;
+  full_name: string;
+  description?: string;
+  web_url: string;
+  clone_url?: string;
+  default_branch: string;
+  private: boolean;
+}
 
 const formSchema = z.object({
   organization_id: z.string().min(1, 'Organization is required'),
   project_id: z.string().min(1, 'Project is required'),
-  name: z.string().min(1, 'Repository name is required'),
-  slug: z.string().min(1, 'Repository slug is required'),
-  remote_id: z.string().min(1, 'Remote ID is required'),
-  web_url: z.string().url('Must be a valid URL').optional().or(z.literal('')),
-  default_branch: z.string().default('main'),
+  repository: z.string().min(1, 'Repository is required'),
   smartcommits_enabled: z.boolean().default(true),
 });
 
@@ -70,6 +79,9 @@ type FormValues = z.infer<typeof formSchema>;
 export function RepositoryLinker() {
   const [open, setOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [discoveredRepos, setDiscoveredRepos] = useState<DiscoveredRepo[]>([]);
+  const [isDiscovering, setIsDiscovering] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   
   const { data: organizations } = useGitOrganizations();
   const { data: repositories, isLoading } = useGitRepositories();
@@ -83,27 +95,66 @@ export function RepositoryLinker() {
     defaultValues: {
       organization_id: '',
       project_id: '',
-      name: '',
-      slug: '',
-      remote_id: '',
-      web_url: '',
-      default_branch: 'main',
+      repository: '',
       smartcommits_enabled: true,
     },
   });
 
+  const selectedOrgId = form.watch('organization_id');
+
+  // Fetch repositories when organization changes
+  useEffect(() => {
+    if (selectedOrgId) {
+      discoverRepositories(selectedOrgId);
+    } else {
+      setDiscoveredRepos([]);
+    }
+  }, [selectedOrgId]);
+
+  const discoverRepositories = async (orgId: string) => {
+    setIsDiscovering(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('git-api/repositories', {
+        body: { organization_id: orgId },
+      });
+
+      if (error) throw error;
+      setDiscoveredRepos(data.repositories || []);
+    } catch (err) {
+      console.error('Failed to discover repositories:', err);
+      toast.error('Failed to fetch repositories from Git provider');
+      setDiscoveredRepos([]);
+    } finally {
+      setIsDiscovering(false);
+    }
+  };
+
+  const filteredRepos = discoveredRepos.filter(repo =>
+    repo.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    repo.full_name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const onSubmit = async (values: FormValues) => {
+    const selectedRepo = discoveredRepos.find(r => r.id === values.repository);
+    if (!selectedRepo) {
+      toast.error('Please select a repository');
+      return;
+    }
+
     await createRepo.mutateAsync({
       organization_id: values.organization_id,
       project_id: values.project_id,
-      name: values.name,
-      slug: values.slug,
-      remote_id: values.remote_id,
-      web_url: values.web_url || undefined,
-      default_branch: values.default_branch,
+      remote_id: selectedRepo.id,
+      name: selectedRepo.name,
+      slug: selectedRepo.full_name,
+      web_url: selectedRepo.web_url,
+      clone_url: selectedRepo.clone_url,
+      default_branch: selectedRepo.default_branch,
       smartcommits_enabled: values.smartcommits_enabled,
     });
     form.reset();
+    setDiscoveredRepos([]);
+    setSearchTerm('');
     setOpen(false);
   };
 
@@ -129,6 +180,11 @@ export function RepositoryLinker() {
     return org?.name || 'Unknown';
   };
 
+  // Check if a repo is already linked
+  const isRepoLinked = (remoteId: string) => {
+    return repositories?.some(r => r.remote_id === remoteId);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -146,83 +202,51 @@ export function RepositoryLinker() {
             Repositories linked to projects for commit and PR tracking.
           </p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={(o) => {
+          setOpen(o);
+          if (!o) {
+            form.reset();
+            setDiscoveredRepos([]);
+            setSearchTerm('');
+          }
+        }}>
           <DialogTrigger asChild>
             <Button disabled={!organizations?.length}>
               <LinkIcon className="h-4 w-4 mr-2" />
               Link Repository
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
               <DialogTitle>Link Repository</DialogTitle>
               <DialogDescription>
-                Link a Git repository to a project to track commits and pull requests.
+                Select a repository from your Git provider to link with a project.
               </DialogDescription>
             </DialogHeader>
 
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="organization_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Git Provider</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select provider" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {organizations?.map((org) => (
-                            <SelectItem key={org.id} value={org.id}>
-                              {org.name} ({org.provider_type})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="project_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Project</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select project" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {projects?.map((project) => (
-                            <SelectItem key={project.id} value={project.id}>
-                              {project.pkey} - {project.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="name"
+                    name="organization_id"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Repository Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="my-repo" {...field} />
-                        </FormControl>
+                        <FormLabel>Git Provider</FormLabel>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select provider" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {organizations?.filter(o => o.is_active).map((org) => (
+                              <SelectItem key={org.id} value={org.id}>
+                                {org.name} ({org.provider_type})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -230,91 +254,157 @@ export function RepositoryLinker() {
 
                   <FormField
                     control={form.control}
-                    name="slug"
+                    name="project_id"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Slug / Path</FormLabel>
-                        <FormControl>
-                          <Input placeholder="org/my-repo" {...field} />
-                        </FormControl>
+                        <FormLabel>Project</FormLabel>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select project" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {projects?.map((project) => (
+                              <SelectItem key={project.id} value={project.id}>
+                                {project.pkey} - {project.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="remote_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Remote ID</FormLabel>
-                      <FormControl>
-                        <Input placeholder="12345 or UUID" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        The repository ID from your Git provider.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {selectedOrgId && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <FormLabel>Repository</FormLabel>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => discoverRepositories(selectedOrgId)}
+                        disabled={isDiscovering}
+                      >
+                        <RefreshCw className={`h-4 w-4 mr-1 ${isDiscovering ? 'animate-spin' : ''}`} />
+                        Refresh
+                      </Button>
+                    </div>
+
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search repositories..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-9"
+                      />
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="repository"
+                      render={({ field }) => (
+                        <FormItem>
+                          <ScrollArea className="h-[200px] border rounded-md">
+                            {isDiscovering ? (
+                              <div className="flex items-center justify-center h-full py-8">
+                                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                              </div>
+                            ) : filteredRepos.length === 0 ? (
+                              <div className="flex flex-col items-center justify-center h-full py-8 text-muted-foreground">
+                                <GitBranch className="h-8 w-8 mb-2 opacity-50" />
+                                <p className="text-sm">
+                                  {searchTerm ? 'No matching repositories' : 'No repositories found'}
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="p-2 space-y-1">
+                                {filteredRepos.map((repo) => {
+                                  const linked = isRepoLinked(repo.id);
+                                  return (
+                                    <div
+                                      key={repo.id}
+                                      className={`flex items-center justify-between p-2 rounded-md cursor-pointer transition-colors ${
+                                        field.value === repo.id
+                                          ? 'bg-primary/10 border border-primary'
+                                          : linked
+                                          ? 'opacity-50 cursor-not-allowed bg-muted'
+                                          : 'hover:bg-muted'
+                                      }`}
+                                      onClick={() => {
+                                        if (!linked) {
+                                          field.onChange(repo.id);
+                                        }
+                                      }}
+                                    >
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                          <span className="font-medium truncate">{repo.name}</span>
+                                          {repo.private && (
+                                            <Badge variant="outline" className="text-xs">Private</Badge>
+                                          )}
+                                          {linked && (
+                                            <Badge variant="secondary" className="text-xs">Linked</Badge>
+                                          )}
+                                        </div>
+                                        <p className="text-xs text-muted-foreground truncate">
+                                          {repo.full_name}
+                                        </p>
+                                      </div>
+                                      {repo.web_url && (
+                                        <a
+                                          href={repo.web_url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-muted-foreground hover:text-foreground ml-2"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          <ExternalLink className="h-4 w-4" />
+                                        </a>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </ScrollArea>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
 
                 <FormField
                   control={form.control}
-                  name="web_url"
+                  name="smartcommits_enabled"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Web URL (Optional)</FormLabel>
+                    <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                      <div>
+                        <FormLabel className="text-base">Smart Commits</FormLabel>
+                        <p className="text-sm text-muted-foreground">
+                          Parse commit messages for issue keys and commands
+                        </p>
+                      </div>
                       <FormControl>
-                        <Input placeholder="https://github.com/org/repo" {...field} />
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
                       </FormControl>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="default_branch"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Default Branch</FormLabel>
-                        <FormControl>
-                          <Input placeholder="main" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="smartcommits_enabled"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col justify-end">
-                        <FormLabel>Smart Commits</FormLabel>
-                        <div className="flex items-center gap-2">
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                          <span className="text-sm text-muted-foreground">
-                            {field.value ? 'Enabled' : 'Disabled'}
-                          </span>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
 
                 <div className="flex justify-end gap-2 pt-4">
                   <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={createRepo.isPending}>
+                  <Button type="submit" disabled={createRepo.isPending || !form.watch('repository')}>
                     {createRepo.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                     Link Repository
                   </Button>
@@ -362,7 +452,7 @@ export function RepositoryLinker() {
                       <span>{getOrgName(repo.organization_id)}</span>
                       <span>→</span>
                       <Badge variant="secondary" className="font-normal">
-                        {getProjectName(repo.project_id)}
+                        {getProjectName(repo.project_id ?? null)}
                       </Badge>
                     </div>
                   </div>
