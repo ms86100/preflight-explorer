@@ -20,3 +20,7 @@ export { CommitsList } from './components/CommitsList';
 export { BranchesList } from './components/BranchesList';
 export { PullRequestsList } from './components/PullRequestsList';
 export { DeploymentsList } from './components/DeploymentsList';
+export { GitIntegrationPanel } from './components/GitIntegrationPanel';
+export { GitOrganizationForm } from './components/GitOrganizationForm';
+export { GitOrganizationsList } from './components/GitOrganizationsList';
+export { RepositoryLinker } from './components/RepositoryLinker';

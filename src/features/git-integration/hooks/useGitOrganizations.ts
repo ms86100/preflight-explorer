@@ -9,7 +9,7 @@ import {
   updateGitOrganization,
   deleteGitOrganization,
 } from '../services/gitIntegrationService';
-import type { CreateGitOrganizationInput } from '../types';
+import type { CreateGitOrganizationInput, UpdateGitOrganizationInput } from '../types';
 
 const QUERY_KEY = 'git-organizations';
 
@@ -47,7 +47,7 @@ export function useUpdateGitOrganization() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: Partial<CreateGitOrganizationInput> }) =>
+    mutationFn: ({ id, ...updates }: { id: string } & UpdateGitOrganizationInput) =>
       updateGitOrganization(id, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
