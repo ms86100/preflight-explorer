@@ -504,24 +504,37 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Get user from auth header
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    
+    // Use anon key client for auth verification
     const authHeader = req.headers.get('authorization');
     let userId: string | null = null;
 
     if (authHeader) {
       const token = authHeader.replace('Bearer ', '');
-      const { data: { user } } = await supabase.auth.getUser(token);
+      // Create a client with the user's token for auth verification
+      const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+        global: {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      });
+      const { data: { user }, error: authError } = await authClient.auth.getUser();
+      if (authError) {
+        console.error('[csv-import] Auth error:', authError.message);
+      }
       userId = user?.id || null;
     }
 
     if (!userId) {
+      console.error('[csv-import] No valid user found from auth header');
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Use service role client for database operations (bypasses RLS)
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const body: ImportRequest = await req.json();
     const { action, jobId, importType, csvData, fieldMappings } = body;
