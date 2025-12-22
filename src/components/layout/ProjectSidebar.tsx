@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import {
-  Kanban,
+  LayoutGrid,
   ListTodo,
   Tag,
   BarChart3,
@@ -9,12 +9,14 @@ import {
   ChevronLeft,
   ChevronRight,
   Plus,
-  FolderKanban,
   Layers,
+  Target,
+  Calendar,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Project } from '@/types/jira';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ProjectSidebarProps {
   project?: Project;
@@ -22,13 +24,14 @@ interface ProjectSidebarProps {
   onToggleCollapse?: () => void;
 }
 
+// Original terminology - legally distinct naming
 const PROJECT_NAV_ITEMS = [
-  { label: 'Kanban board', href: 'board', icon: Kanban },
-  { label: 'Backlog', href: 'backlog', icon: ListTodo },
-  { label: 'Releases', href: 'releases', icon: Tag },
-  { label: 'Reports', href: 'reports', icon: BarChart3 },
-  { label: 'Issues', href: 'issues', icon: FileCode },
-  { label: 'Components', href: 'components', icon: Layers },
+  { label: 'Planner', href: 'board', icon: LayoutGrid, description: 'Visual work planner' },
+  { label: 'Queue', href: 'backlog', icon: ListTodo, description: 'Prioritized work queue' },
+  { label: 'Milestones', href: 'releases', icon: Tag, description: 'Release milestones' },
+  { label: 'Insights', href: 'reports', icon: BarChart3, description: 'Analytics & reports' },
+  { label: 'Work Items', href: 'issues', icon: FileCode, description: 'All work items' },
+  { label: 'Modules', href: 'components', icon: Layers, description: 'System modules' },
 ];
 
 export function ProjectSidebar({ 
@@ -44,131 +47,174 @@ export function ProjectSidebar({
   };
 
   return (
-    <aside 
-      className={cn(
-        'bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-200',
-        isCollapsed ? 'w-14' : 'w-60'
-      )}
-    >
-      {/* Project Header */}
-      {project && !isCollapsed && (
-        <div className="p-3 border-b border-sidebar-border">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded bg-gradient-to-br from-primary/80 to-primary flex items-center justify-center flex-shrink-0">
-              {project.avatar_url ? (
-                <img 
-                  src={project.avatar_url} 
-                  alt={project.name} 
-                  className="w-full h-full rounded"
-                />
-              ) : (
-                <span className="text-white font-bold text-sm">{project.pkey?.slice(0, 2).toUpperCase()}</span>
-              )}
+    <TooltipProvider delayDuration={0}>
+      <aside 
+        className={cn(
+          'bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300 ease-in-out',
+          isCollapsed ? 'w-16' : 'w-64'
+        )}
+      >
+        {/* Program Header */}
+        {project && !isCollapsed && (
+          <div className="p-4 border-b border-sidebar-border">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0 shadow-glow">
+                {project.avatar_url ? (
+                  <img 
+                    src={project.avatar_url} 
+                    alt={project.name} 
+                    className="w-full h-full rounded-xl"
+                  />
+                ) : (
+                  <span className="text-white font-bold text-sm">{project.pkey?.slice(0, 2).toUpperCase()}</span>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="font-semibold text-sm text-sidebar-foreground truncate">{project.name || project.pkey?.toLowerCase()}</h2>
+                <p className="text-xs text-sidebar-muted flex items-center gap-1">
+                  <Target className="h-3 w-3" />
+                  Program
+                </p>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <h2 className="font-medium text-sm text-sidebar-foreground truncate">{project.pkey?.toLowerCase()}</h2>
-              <p className="text-xs text-sidebar-muted">
-                Software project
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Project Header - Collapsed */}
-      {project && isCollapsed && (
-        <div className="p-2 flex justify-center border-b border-sidebar-border">
-          <div className="w-9 h-9 rounded bg-gradient-to-br from-primary/80 to-primary flex items-center justify-center">
-            <span className="text-white font-bold text-xs">{project.pkey?.slice(0, 2).toUpperCase()}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Board Section */}
-      {!isCollapsed && (
-        <div className="px-3 pt-4 pb-1">
-          <span className="text-xs font-medium text-sidebar-muted flex items-center gap-1">
-            <Kanban className="h-3 w-3" />
-            {project?.pkey} board
-            <ChevronRight className="h-3 w-3 ml-auto opacity-50" />
-          </span>
-        </div>
-      )}
-
-      {/* Navigation */}
-      <nav className="flex-1 py-1">
-        {PROJECT_NAV_ITEMS.map((item) => (
-          <Link
-            key={item.href}
-            to={`${baseUrl}/${item.href}`}
-            className={cn(
-              'flex items-center gap-2.5 px-3 py-1.5 text-sm transition-colors mx-1 rounded-sm',
-              isActive(item.href)
-                ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
-                : 'text-sidebar-foreground hover:bg-sidebar-accent/50',
-              isCollapsed && 'justify-center mx-0 px-0'
-            )}
-            title={isCollapsed ? item.label : undefined}
-          >
-            <item.icon className={cn('h-4 w-4 flex-shrink-0', isActive(item.href) ? 'text-primary' : 'text-sidebar-muted')} />
-            {!isCollapsed && <span>{item.label}</span>}
-          </Link>
-        ))}
-
-        {/* Project Shortcuts Section */}
-        {!isCollapsed && (
-          <div className="mt-6 mx-3">
-            <div className="text-xs font-semibold text-sidebar-muted uppercase tracking-wide mb-2">
-              Project Shortcuts
-            </div>
-            <p className="text-xs text-sidebar-muted leading-relaxed mb-2">
-              Add a link to useful information for your whole team to see.
-            </p>
-            <button
-              className="flex items-center gap-1.5 text-sm text-primary hover:underline"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Add shortcut
-            </button>
           </div>
         )}
-      </nav>
 
-      {/* Project Settings */}
-      <div className="border-t border-sidebar-border p-1">
-        <Link
-          to={`${baseUrl}/settings`}
-          className={cn(
-            'flex items-center gap-2.5 px-3 py-1.5 text-sm transition-colors rounded-sm',
-            'text-sidebar-foreground hover:bg-sidebar-accent/50',
-            isCollapsed && 'justify-center px-0'
-          )}
-          title={isCollapsed ? 'Project settings' : undefined}
-        >
-          <Settings className="h-4 w-4 flex-shrink-0 text-sidebar-muted" />
-          {!isCollapsed && <span>Project settings</span>}
-        </Link>
+        {/* Program Header - Collapsed */}
+        {project && isCollapsed && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="p-3 flex justify-center border-b border-sidebar-border">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-glow">
+                  <span className="text-white font-bold text-xs">{project.pkey?.slice(0, 2).toUpperCase()}</span>
+                </div>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="font-medium">
+              {project.name || project.pkey}
+            </TooltipContent>
+          </Tooltip>
+        )}
 
-        {/* Collapse Toggle */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onToggleCollapse}
-          className={cn(
-            'w-full mt-1 text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent/50 h-8 rounded-sm',
-            isCollapsed && 'justify-center'
+        {/* Planning Section Header */}
+        {!isCollapsed && (
+          <div className="px-4 pt-5 pb-2">
+            <div className="flex items-center gap-2 text-xs font-semibold text-sidebar-muted uppercase tracking-wider">
+              <Calendar className="h-3.5 w-3.5" />
+              Planning
+            </div>
+          </div>
+        )}
+
+        {/* Navigation */}
+        <nav className="flex-1 py-2 px-2">
+          {PROJECT_NAV_ITEMS.map((item) => {
+            const linkContent = (
+              <Link
+                to={`${baseUrl}/${item.href}`}
+                className={cn(
+                  'flex items-center gap-3 px-3 py-2.5 text-sm transition-all duration-200 rounded-lg group',
+                  isActive(item.href)
+                    ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-sm'
+                    : 'text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground',
+                  isCollapsed && 'justify-center px-0'
+                )}
+              >
+                <item.icon 
+                  className={cn(
+                    'h-5 w-5 flex-shrink-0 transition-colors',
+                    isActive(item.href) ? 'text-primary' : 'text-sidebar-muted group-hover:text-primary'
+                  )} 
+                />
+                {!isCollapsed && (
+                  <div className="flex-1 min-w-0">
+                    <span className="block">{item.label}</span>
+                  </div>
+                )}
+              </Link>
+            );
+
+            if (isCollapsed) {
+              return (
+                <Tooltip key={item.href}>
+                  <TooltipTrigger asChild>
+                    {linkContent}
+                  </TooltipTrigger>
+                  <TooltipContent side="right" className="font-medium">
+                    <p>{item.label}</p>
+                    <p className="text-xs text-muted-foreground">{item.description}</p>
+                  </TooltipContent>
+                </Tooltip>
+              );
+            }
+
+            return <div key={item.href}>{linkContent}</div>;
+          })}
+
+          {/* Program Shortcuts Section */}
+          {!isCollapsed && (
+            <div className="mt-8 mx-2 p-4 bg-muted/30 rounded-xl border border-border/50">
+              <div className="text-xs font-semibold text-foreground mb-2">
+                Quick Links
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+                Add shortcuts to important resources for your team.
+              </p>
+              <button
+                className="flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 font-medium transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                Add Link
+              </button>
+            </div>
           )}
-        >
+        </nav>
+
+        {/* Program Settings & Collapse */}
+        <div className="border-t border-sidebar-border p-2">
           {isCollapsed ? (
-            <ChevronRight className="h-4 w-4" />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  to={`${baseUrl}/settings`}
+                  className="flex items-center justify-center p-2.5 text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent/50 rounded-lg transition-colors"
+                >
+                  <Settings className="h-5 w-5" />
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right">Program Settings</TooltipContent>
+            </Tooltip>
           ) : (
-            <>
-              <ChevronLeft className="h-4 w-4 mr-2" />
-              <span className="text-xs">«</span>
-            </>
+            <Link
+              to={`${baseUrl}/settings`}
+              className="flex items-center gap-3 px-3 py-2.5 text-sm transition-colors rounded-lg text-sidebar-foreground hover:bg-sidebar-accent/50"
+            >
+              <Settings className="h-5 w-5 text-sidebar-muted" />
+              <span>Program Settings</span>
+            </Link>
           )}
-        </Button>
-      </div>
-    </aside>
+
+          {/* Collapse Toggle */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onToggleCollapse}
+            className={cn(
+              'w-full mt-1 text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent/50 h-10 rounded-lg transition-all',
+              isCollapsed && 'justify-center'
+            )}
+          >
+            {isCollapsed ? (
+              <ChevronRight className="h-5 w-5" />
+            ) : (
+              <>
+                <ChevronLeft className="h-5 w-5 mr-2" />
+                <span className="text-sm">Collapse</span>
+              </>
+            )}
+          </Button>
+        </div>
+      </aside>
+    </TooltipProvider>
   );
 }

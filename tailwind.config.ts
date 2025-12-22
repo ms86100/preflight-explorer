@@ -14,7 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        sans: ['Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -77,47 +78,53 @@ export default {
           DEFAULT: "hsl(var(--header-background))",
           foreground: "hsl(var(--header-foreground))",
         },
-        // Issue Type Colors
-        issue: {
-          epic: "hsl(var(--issue-epic))",
-          story: "hsl(var(--issue-story))",
-          task: "hsl(var(--issue-task))",
-          bug: "hsl(var(--issue-bug))",
-          subtask: "hsl(var(--issue-subtask))",
+        // Work Item Type Colors
+        workitem: {
+          initiative: "hsl(var(--workitem-initiative))",
+          task: "hsl(var(--workitem-task))",
+          subtask: "hsl(var(--workitem-subtask))",
+          defect: "hsl(var(--workitem-defect))",
+          requirement: "hsl(var(--workitem-requirement))",
         },
         // Priority Colors
         priority: {
-          highest: "hsl(var(--priority-highest))",
+          critical: "hsl(var(--priority-critical))",
           high: "hsl(var(--priority-high))",
           medium: "hsl(var(--priority-medium))",
           low: "hsl(var(--priority-low))",
-          lowest: "hsl(var(--priority-lowest))",
+          minimal: "hsl(var(--priority-minimal))",
         },
         // Status Colors
         status: {
-          todo: "hsl(var(--status-todo))",
-          inprogress: "hsl(var(--status-in-progress))",
-          done: "hsl(var(--status-done))",
+          queued: "hsl(var(--status-queued))",
+          active: "hsl(var(--status-active))",
+          complete: "hsl(var(--status-complete))",
           blocked: "hsl(var(--status-blocked))",
         },
-        // Classification Colors (MRTT+ Compliance)
+        // Classification Colors (Compliance)
         classification: {
           public: "hsl(var(--classification-public))",
           restricted: "hsl(var(--classification-restricted))",
           confidential: "hsl(var(--classification-confidential))",
           "export-controlled": "hsl(var(--classification-export-controlled))",
         },
-        // Atlassian Blue
-        atlassian: {
-          blue: "hsl(var(--atlassian-blue))",
-          "blue-dark": "hsl(var(--atlassian-blue-dark))",
-          "blue-light": "hsl(var(--atlassian-blue-light))",
+        // Vertex Brand Colors
+        vertex: {
+          teal: "hsl(var(--vertex-teal))",
+          "teal-dark": "hsl(var(--vertex-teal-dark))",
+          "teal-light": "hsl(var(--vertex-teal-light))",
+          navy: "hsl(var(--vertex-navy))",
+          slate: "hsl(var(--vertex-slate))",
         },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      boxShadow: {
+        'glow': '0 0 20px -5px hsl(var(--primary) / 0.3)',
+        'glow-lg': '0 0 40px -10px hsl(var(--primary) / 0.4)',
       },
       keyframes: {
         "accordion-down": {
@@ -136,6 +143,14 @@ export default {
           from: { transform: "translateX(0)" },
           to: { transform: "translateX(100%)" },
         },
+        "slide-in-left": {
+          from: { transform: "translateX(-100%)" },
+          to: { transform: "translateX(0)" },
+        },
+        "slide-out-left": {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(-100%)" },
+        },
         "fade-in": {
           from: { opacity: "0" },
           to: { opacity: "1" },
@@ -144,19 +159,31 @@ export default {
           from: { opacity: "1" },
           to: { opacity: "0" },
         },
+        "scale-in": {
+          from: { transform: "scale(0.95)", opacity: "0" },
+          to: { transform: "scale(1)", opacity: "1" },
+        },
+        "pulse-glow": {
+          "0%, 100%": { boxShadow: "0 0 20px -5px hsl(var(--primary) / 0.3)" },
+          "50%": { boxShadow: "0 0 30px -5px hsl(var(--primary) / 0.5)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "slide-in-right": "slide-in-right 0.3s ease-out",
         "slide-out-right": "slide-out-right 0.3s ease-out",
+        "slide-in-left": "slide-in-left 0.3s ease-out",
+        "slide-out-left": "slide-out-left 0.3s ease-out",
         "fade-in": "fade-in 0.2s ease-out",
         "fade-out": "fade-out 0.2s ease-out",
+        "scale-in": "scale-in 0.2s ease-out",
+        "pulse-glow": "pulse-glow 2s ease-in-out infinite",
       },
       spacing: {
-        "sidebar-width": "240px",
-        "sidebar-collapsed": "56px",
-        "header-height": "56px",
+        "sidebar-width": "260px",
+        "sidebar-collapsed": "64px",
+        "header-height": "60px",
       },
     },
   },
