@@ -286,6 +286,37 @@ export const referenceDataService = {
     return data;
   },
 
+  async createStatus(status: {
+    name: string;
+    category: 'todo' | 'in_progress' | 'done';
+    color?: string;
+    description?: string;
+  }) {
+    // Get the next position
+    const { data: existing } = await supabase
+      .from('issue_statuses')
+      .select('position')
+      .order('position', { ascending: false })
+      .limit(1);
+    
+    const nextPosition = (existing?.[0]?.position ?? 0) + 1;
+    
+    const { data, error } = await supabase
+      .from('issue_statuses')
+      .insert({
+        name: status.name,
+        category: status.category,
+        color: status.color || '#6B7280',
+        description: status.description || null,
+        position: nextPosition,
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
   async getResolutions() {
     const { data, error } = await supabase
       .from('resolutions')
