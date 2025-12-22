@@ -19,6 +19,7 @@ import {
   Send,
   Loader2,
   Copy,
+  GitBranch,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,6 +54,7 @@ import { IssueHistorySection } from './IssueHistorySection';
 import { CustomFieldsForm } from '@/features/custom-fields/components/CustomFieldsForm';
 import { MentionTextarea, renderMentions } from '@/features/comments';
 import { Jobs } from '@/lib/backgroundJobs';
+import { DevelopmentPanel } from '@/features/git-integration';
 
 const ISSUE_TYPE_ICONS: Record<string, typeof Bug> = {
   Epic: Zap,
@@ -517,6 +519,17 @@ export function IssueDetailModal({ issueId, open, onOpenChange }: IssueDetailMod
                     issueId={issueId}
                     projectId={issue.project_id}
                   />
+                </div>
+
+                <Separator />
+
+                {/* Development Panel - Git Integration */}
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-3 block flex items-center gap-2">
+                    <GitBranch className="h-4 w-4" />
+                    Development
+                  </Label>
+                  <DevelopmentPanel issueId={issueId} issueKey={issue.issue_key} />
                 </div>
 
                 <Separator />

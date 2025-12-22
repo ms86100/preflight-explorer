@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.ldap-sync]
 verify_jwt = false
+
+[functions.git-webhook]
+verify_jwt = false
