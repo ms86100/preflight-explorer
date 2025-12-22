@@ -74,7 +74,7 @@ export const projectService = {
 
   // Keep non-paginated for backward compatibility (limited to 100)
   async getAll() {
-    const result = await this.getAllPaginated({ page: 1, pageSize: 100 });
+    const result = await projectService.getAllPaginated({ page: 1, pageSize: 100 });
     return result.data;
   },
 
