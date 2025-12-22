@@ -1,155 +1,157 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* ============================================
-   JIRA DATA CENTER - DESIGN SYSTEM
-   Classic Jira Data Center Look & Feel
+   VERTEX WORK PLATFORM - DESIGN SYSTEM
+   Original Enterprise Work Management Platform
    ============================================ */
 
 @layer base {
   :root {
-    /* Atlassian Brand Colors - Classic Jira */
-    --atlassian-blue: 212 80% 42%;
-    --atlassian-blue-dark: 212 80% 32%;
-    --atlassian-blue-light: 212 80% 96%;
+    /* Brand Colors - Vertex Identity */
+    --vertex-teal: 172 66% 50%;
+    --vertex-teal-dark: 172 66% 35%;
+    --vertex-teal-light: 172 40% 96%;
+    --vertex-navy: 222 47% 18%;
+    --vertex-slate: 215 20% 65%;
     
-    /* Classification Colors (MRTT+ Compliance) */
+    /* Classification Colors (Compliance) */
     --classification-public: 142 76% 36%;
     --classification-restricted: 45 93% 47%;
     --classification-confidential: 25 95% 53%;
     --classification-export-controlled: 0 84% 60%;
     
     /* Core Semantic Tokens - Light Theme */
-    --background: 0 0% 100%;
-    --foreground: 210 10% 23%;
+    --background: 210 20% 98%;
+    --foreground: 222 47% 18%;
     
     --card: 0 0% 100%;
-    --card-foreground: 210 10% 23%;
+    --card-foreground: 222 47% 18%;
     
     --popover: 0 0% 100%;
-    --popover-foreground: 210 10% 23%;
+    --popover-foreground: 222 47% 18%;
     
-    /* Atlassian Blue as Primary */
-    --primary: 212 80% 42%;
+    /* Vertex Teal as Primary */
+    --primary: 172 66% 50%;
     --primary-foreground: 0 0% 100%;
     
-    /* Neutral Secondary - Light gray backgrounds */
-    --secondary: 210 16% 93%;
-    --secondary-foreground: 210 10% 23%;
+    /* Neutral Secondary */
+    --secondary: 215 20% 95%;
+    --secondary-foreground: 222 47% 18%;
     
-    --muted: 210 16% 96%;
-    --muted-foreground: 210 10% 46%;
+    --muted: 215 15% 92%;
+    --muted-foreground: 215 20% 45%;
     
-    --accent: 210 16% 93%;
-    --accent-foreground: 210 10% 23%;
-    
-    /* Status Colors */
-    --destructive: 0 74% 42%;
-    --destructive-foreground: 0 0% 100%;
-    
-    --success: 145 63% 32%;
-    --success-foreground: 0 0% 100%;
-    
-    --warning: 45 93% 47%;
-    --warning-foreground: 210 10% 23%;
-    
-    --info: 212 80% 42%;
-    --info-foreground: 0 0% 100%;
-    
-    /* Borders & Inputs - Subtle gray borders */
-    --border: 210 14% 83%;
-    --input: 210 14% 83%;
-    --ring: 212 80% 42%;
-    
-    --radius: 0.1875rem;
-    
-    /* Jira Data Center Sidebar - Light gray */
-    --sidebar-background: 210 14% 97%;
-    --sidebar-foreground: 210 10% 23%;
-    --sidebar-primary: 212 80% 42%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 212 80% 96%;
-    --sidebar-accent-foreground: 212 80% 32%;
-    --sidebar-border: 210 14% 89%;
-    --sidebar-ring: 212 80% 42%;
-    --sidebar-muted: 210 10% 60%;
-    
-    /* Header - Dark blue gradient like Jira Data Center */
-    --header-background: 212 80% 32%;
-    --header-foreground: 0 0% 100%;
-    
-    /* Issue Type Colors */
-    --issue-epic: 271 68% 53%;
-    --issue-story: 145 63% 42%;
-    --issue-task: 212 80% 52%;
-    --issue-bug: 0 74% 42%;
-    --issue-subtask: 212 80% 52%;
-    
-    /* Priority Colors */
-    --priority-highest: 0 74% 42%;
-    --priority-high: 25 95% 53%;
-    --priority-medium: 45 93% 47%;
-    --priority-low: 145 63% 42%;
-    --priority-lowest: 160 84% 39%;
+    --accent: 262 83% 58%;
+    --accent-foreground: 0 0% 100%;
     
     /* Status Colors */
-    --status-todo: 210 10% 46%;
-    --status-in-progress: 212 80% 42%;
-    --status-done: 145 63% 32%;
-    --status-blocked: 0 74% 42%;
-    
-    /* Lozenge Colors - Classic Jira style */
-    --lozenge-default-bg: 210 16% 93%;
-    --lozenge-default-text: 210 10% 35%;
-    --lozenge-success-bg: 145 63% 91%;
-    --lozenge-success-text: 145 63% 25%;
-    --lozenge-moved-bg: 45 93% 90%;
-    --lozenge-moved-text: 45 80% 25%;
-    --lozenge-inprogress-bg: 212 80% 93%;
-    --lozenge-inprogress-text: 212 80% 32%;
-    --lozenge-removed-bg: 0 74% 94%;
-    --lozenge-removed-text: 0 74% 35%;
-  }
-
-  .dark {
-    --background: 215 20% 14%;
-    --foreground: 210 20% 90%;
-    
-    --card: 215 20% 18%;
-    --card-foreground: 210 20% 90%;
-    
-    --popover: 215 20% 18%;
-    --popover-foreground: 210 20% 90%;
-    
-    --primary: 212 80% 52%;
-    --primary-foreground: 0 0% 100%;
-    
-    --secondary: 215 20% 22%;
-    --secondary-foreground: 210 20% 90%;
-    
-    --muted: 215 20% 22%;
-    --muted-foreground: 210 16% 60%;
-    
-    --accent: 215 20% 22%;
-    --accent-foreground: 210 20% 90%;
-    
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
     
-    --border: 215 20% 28%;
-    --input: 215 20% 28%;
-    --ring: 212 80% 52%;
+    --success: 152 82% 39%;
+    --success-foreground: 0 0% 100%;
     
-    --sidebar-background: 215 20% 12%;
-    --sidebar-foreground: 210 20% 85%;
-    --sidebar-accent: 215 20% 18%;
-    --sidebar-border: 215 20% 22%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 222 47% 18%;
     
-    --header-background: 215 20% 16%;
-    --header-foreground: 210 20% 90%;
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+    
+    /* Borders & Inputs */
+    --border: 220 13% 87%;
+    --input: 220 13% 87%;
+    --ring: 172 66% 50%;
+    
+    --radius: 0.5rem;
+    
+    /* Sidebar - Modern glass effect */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 18%;
+    --sidebar-primary: 172 66% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 172 40% 96%;
+    --sidebar-accent-foreground: 172 66% 35%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 172 66% 50%;
+    --sidebar-muted: 215 20% 55%;
+    
+    /* Header - Gradient navy */
+    --header-background: 222 47% 15%;
+    --header-foreground: 0 0% 100%;
+    
+    /* Work Item Type Colors */
+    --workitem-initiative: 271 68% 55%;
+    --workitem-task: 172 66% 50%;
+    --workitem-subtask: 199 89% 48%;
+    --workitem-defect: 0 72% 51%;
+    --workitem-requirement: 262 83% 58%;
+    
+    /* Priority Colors */
+    --priority-critical: 0 72% 51%;
+    --priority-high: 25 95% 53%;
+    --priority-medium: 38 92% 50%;
+    --priority-low: 152 82% 39%;
+    --priority-minimal: 172 66% 50%;
+    
+    /* Status Colors */
+    --status-queued: 215 20% 55%;
+    --status-active: 199 89% 48%;
+    --status-complete: 152 82% 39%;
+    --status-blocked: 0 72% 51%;
+    
+    /* Tag Colors */
+    --tag-default-bg: 215 20% 93%;
+    --tag-default-text: 215 20% 35%;
+    --tag-success-bg: 152 82% 92%;
+    --tag-success-text: 152 82% 25%;
+    --tag-warning-bg: 38 92% 92%;
+    --tag-warning-text: 38 80% 25%;
+    --tag-active-bg: 199 89% 92%;
+    --tag-active-text: 199 89% 30%;
+    --tag-error-bg: 0 72% 94%;
+    --tag-error-text: 0 72% 35%;
+  }
+
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 210 20% 92%;
+    
+    --card: 222 47% 14%;
+    --card-foreground: 210 20% 92%;
+    
+    --popover: 222 47% 14%;
+    --popover-foreground: 210 20% 92%;
+    
+    --primary: 172 66% 55%;
+    --primary-foreground: 222 47% 11%;
+    
+    --secondary: 222 30% 20%;
+    --secondary-foreground: 210 20% 92%;
+    
+    --muted: 222 30% 18%;
+    --muted-foreground: 215 15% 55%;
+    
+    --accent: 262 83% 65%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 222 30% 22%;
+    --input: 222 30% 22%;
+    --ring: 172 66% 55%;
+    
+    --sidebar-background: 222 47% 9%;
+    --sidebar-foreground: 210 20% 88%;
+    --sidebar-accent: 222 30% 16%;
+    --sidebar-border: 222 30% 18%;
+    
+    --header-background: 222 47% 8%;
+    --header-foreground: 210 20% 92%;
   }
 }
 
@@ -160,64 +162,70 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     font-size: 14px;
-    line-height: 1.42857;
+    line-height: 1.5;
+    letter-spacing: -0.01em;
   }
   
-  /* Jira Data Center scrollbar */
+  /* Modern scrollbar */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
   }
   
   ::-webkit-scrollbar-track {
-    @apply bg-transparent;
+    @apply bg-muted/30 rounded-full;
   }
   
   ::-webkit-scrollbar-thumb {
-    @apply bg-muted-foreground/25 rounded;
+    @apply bg-muted-foreground/20 rounded-full hover:bg-muted-foreground/30 transition-colors;
   }
-  
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted-foreground/40;
+
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.02em;
+    font-weight: 600;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', monospace;
   }
 }
 
 @layer components {
-  /* Jira Lozenge (Status Badge) */
-  .lozenge {
-    @apply inline-flex items-center px-1.5 py-0.5 rounded-sm text-[11px] font-bold uppercase tracking-wide;
+  /* Status Tag (replaces lozenge) */
+  .status-tag {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium tracking-wide;
   }
   
-  .lozenge-default {
-    background-color: hsl(var(--lozenge-default-bg));
-    color: hsl(var(--lozenge-default-text));
+  .status-tag-default {
+    background-color: hsl(var(--tag-default-bg));
+    color: hsl(var(--tag-default-text));
   }
   
-  .lozenge-success {
-    background-color: hsl(var(--lozenge-success-bg));
-    color: hsl(var(--lozenge-success-text));
+  .status-tag-success {
+    background-color: hsl(var(--tag-success-bg));
+    color: hsl(var(--tag-success-text));
   }
   
-  .lozenge-inprogress {
-    background-color: hsl(var(--lozenge-inprogress-bg));
-    color: hsl(var(--lozenge-inprogress-text));
+  .status-tag-active {
+    background-color: hsl(var(--tag-active-bg));
+    color: hsl(var(--tag-active-text));
   }
   
-  .lozenge-moved {
-    background-color: hsl(var(--lozenge-moved-bg));
-    color: hsl(var(--lozenge-moved-text));
+  .status-tag-warning {
+    background-color: hsl(var(--tag-warning-bg));
+    color: hsl(var(--tag-warning-text));
   }
   
-  .lozenge-removed {
-    background-color: hsl(var(--lozenge-removed-bg));
-    color: hsl(var(--lozenge-removed-text));
+  .status-tag-error {
+    background-color: hsl(var(--tag-error-bg));
+    color: hsl(var(--tag-error-text));
   }
   
-  /* Classification Banner (MRTT+ Compliance) */
+  /* Classification Banner (Compliance) */
   .classification-banner {
-    @apply w-full py-1 px-4 text-center text-xs font-bold uppercase tracking-wider;
+    @apply w-full py-1.5 px-4 text-center text-xs font-semibold uppercase tracking-wider;
   }
   
   .classification-public {
@@ -240,48 +248,66 @@
     @apply text-white;
   }
   
-  /* Jira Issue Card - Classic style */
-  .issue-card {
-    @apply bg-card border border-border rounded-sm p-3 shadow-sm hover:bg-secondary/50 transition-colors cursor-pointer;
+  /* Work Item Card - Modern glass style */
+  .workitem-card {
+    @apply bg-card border border-border/60 rounded-lg p-4 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-200 cursor-pointer;
   }
   
-  /* Jira Quick Filter */
-  .quick-filter {
-    @apply inline-flex items-center px-3 py-1 text-sm font-medium transition-colors;
+  .workitem-card:hover {
+    @apply -translate-y-0.5;
   }
   
-  .quick-filter-inactive {
-    @apply text-primary hover:underline;
+  /* Filter Chip */
+  .filter-chip {
+    @apply inline-flex items-center px-3 py-1.5 text-sm font-medium transition-all rounded-full border;
   }
   
-  .quick-filter-active {
-    @apply text-foreground font-semibold;
+  .filter-chip-inactive {
+    @apply border-border bg-background text-muted-foreground hover:border-primary/50 hover:text-foreground;
+  }
+  
+  .filter-chip-active {
+    @apply border-primary bg-primary/10 text-primary font-semibold;
   }
 
-  /* Jira-style form labels */
-  .jira-label {
-    @apply text-sm font-semibold text-foreground mb-1;
+  /* Form labels */
+  .form-label {
+    @apply text-sm font-medium text-foreground mb-1.5;
   }
 
-  /* Jira-style buttons */
-  .jira-btn-primary {
-    @apply bg-primary text-primary-foreground px-3 py-1.5 text-sm font-medium rounded-sm hover:bg-primary/90 transition-colors;
+  /* Modern buttons */
+  .btn-primary {
+    @apply bg-primary text-primary-foreground px-4 py-2 text-sm font-medium rounded-lg hover:bg-primary/90 transition-all shadow-sm hover:shadow-md;
   }
 
-  .jira-btn-secondary {
-    @apply text-primary hover:underline text-sm font-medium;
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground px-4 py-2 text-sm font-medium rounded-lg hover:bg-secondary/80 transition-all;
   }
 
-  /* Jira-style links */
-  .jira-link {
-    @apply text-primary hover:underline cursor-pointer;
+  .btn-ghost {
+    @apply text-muted-foreground hover:text-foreground hover:bg-muted/50 px-3 py-2 text-sm font-medium rounded-lg transition-all;
+  }
+
+  /* Links */
+  .link {
+    @apply text-primary hover:text-primary/80 underline-offset-4 hover:underline cursor-pointer transition-colors;
+  }
+
+  /* Glass card effect */
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-sm border border-border/40 rounded-xl shadow-lg;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient;
   }
 }
 
 @layer utilities {
   /* Focus ring utility */
   .focus-ring {
-    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 focus:ring-offset-background;
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }
   
   /* Truncate with ellipsis */
@@ -291,4 +317,26 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+
+  .truncate-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Gradient background */
+  .bg-gradient-vertex {
+    @apply bg-gradient-to-br from-primary/10 via-background to-accent/5;
+  }
+}
+
+/* Animation keyframes */
+@keyframes gradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animate-gradient {
+  animation: gradient 3s ease infinite;
 }

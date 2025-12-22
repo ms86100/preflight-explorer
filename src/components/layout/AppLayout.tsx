@@ -28,7 +28,7 @@ export function AppLayout({ children, showSidebar = true, projectKey }: AppLayou
   const mockProject = isProjectView ? {
     id: '1',
     pkey: currentProjectKey || 'PROJ',
-    name: currentProjectKey === 'MRTT' ? 'MRTT Program' : 'ProjectA',
+    name: currentProjectKey === 'MRTT' ? 'MRTT Program' : currentProjectKey || 'Program',
     project_type: 'software' as const,
     template: 'scrum' as const,
     issue_counter: 0,
@@ -40,7 +40,7 @@ export function AppLayout({ children, showSidebar = true, projectKey }: AppLayou
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {/* Classification Banner - MRTT+ Compliance */}
+      {/* Classification Banner - Compliance */}
       <ClassificationBanner level={clearanceLevel} />
       
       {/* Header */}
@@ -60,7 +60,7 @@ export function AppLayout({ children, showSidebar = true, projectKey }: AppLayou
         {/* Main Content */}
         <main className={cn(
           'flex-1 overflow-auto',
-          isProjectView && 'bg-background'
+          isProjectView ? 'bg-gradient-vertex' : 'bg-background'
         )}>
           {children || <Outlet />}
         </main>
