@@ -102,6 +102,56 @@ export function useCompleteSprint() {
   });
 }
 
+export function useUpdateSprint() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: { name?: string; goal?: string; start_date?: string; end_date?: string } }) =>
+      sprintService.update(id, updates),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['sprints'] });
+      toast.success(`Sprint "${data.name}" updated!`);
+    },
+    onError: (error) => {
+      console.error('Failed to update sprint:', error);
+      toast.error('Failed to update sprint.');
+    },
+  });
+}
+
+export function useDeleteSprint() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => sprintService.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sprints'] });
+      toast.success('Sprint deleted!');
+    },
+    onError: (error) => {
+      console.error('Failed to delete sprint:', error);
+      toast.error('Failed to delete sprint.');
+    },
+  });
+}
+
+export function useMoveIssuesToBacklog() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (sprintId: string) => sprintService.moveAllIssuesToBacklog(sprintId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sprints'] });
+      queryClient.invalidateQueries({ queryKey: ['sprintIssues'] });
+      toast.success('Issues moved to backlog!');
+    },
+    onError: (error) => {
+      console.error('Failed to move issues:', error);
+      toast.error('Failed to move issues to backlog.');
+    },
+  });
+}
+
 export function useAddIssueToSprint() {
   const queryClient = useQueryClient();
 
