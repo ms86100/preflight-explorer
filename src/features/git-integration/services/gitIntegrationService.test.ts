@@ -362,7 +362,7 @@ describe('Git Integration Helpers', () => {
   ): IssueDevelopmentSummary {
     const openPRs = pullRequests.filter((pr) => pr.status === 'open');
     const mergedPRs = pullRequests.filter((pr) => pr.status === 'merged');
-    const latestBuild = builds.sort(
+    const latestBuild = [...builds].sort(
       (a, b) => new Date(b.started_at || 0).getTime() - new Date(a.started_at || 0).getTime()
     )[0];
     const deployedEnvs = [

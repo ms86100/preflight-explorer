@@ -348,7 +348,7 @@ describe('Guided Operations Validation', () => {
     // Type-specific validation
     switch (field.type) {
       case 'number':
-        if (typeof value !== 'number' || isNaN(value)) {
+        if (typeof value !== 'number' || Number.isNaN(value)) {
           return { valid: false, error: `${field.label} must be a number` };
         }
         if (field.validation?.min !== undefined && value < field.validation.min) {

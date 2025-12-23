@@ -79,6 +79,13 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+const getRepoItemClassName = (isSelected: boolean, isLinked: boolean): string => {
+  const base = 'flex items-center justify-between p-2 rounded-md cursor-pointer transition-colors';
+  if (isSelected) return `${base} bg-primary/10 border border-primary`;
+  if (isLinked) return `${base} opacity-50 cursor-not-allowed bg-muted`;
+  return `${base} hover:bg-muted`;
+};
+
 export function RepositoryLinker() {
   const [open, setOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -332,13 +339,7 @@ export function RepositoryLinker() {
                                   return (
                                     <div
                                       key={repo.id}
-                                      className={`flex items-center justify-between p-2 rounded-md cursor-pointer transition-colors ${
-                                        field.value === repo.id
-                                          ? 'bg-primary/10 border border-primary'
-                                          : linked
-                                          ? 'opacity-50 cursor-not-allowed bg-muted'
-                                          : 'hover:bg-muted'
-                                      }`}
+                                      className={getRepoItemClassName(field.value === repo.id, linked)}
                                       onClick={() => {
                                         if (!linked) {
                                           field.onChange(repo.id);

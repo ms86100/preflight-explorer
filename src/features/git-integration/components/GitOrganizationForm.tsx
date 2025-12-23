@@ -60,6 +60,12 @@ const PROVIDER_DEFAULTS: Record<string, string> = {
   bitbucket: 'https://bitbucket.org',
 };
 
+const getOAuthAppUrl = (provider: string, hostUrl: string): string => {
+  if (provider === 'github') return 'https://github.com/settings/developers';
+  if (provider === 'gitlab') return `${hostUrl}/-/profile/applications`;
+  return 'https://bitbucket.org/account/settings/app-authorizations/';
+};
+
 interface GitOrganizationFormProps {
   readonly onSuccess?: () => void;
 }
@@ -136,7 +142,7 @@ export function GitOrganizationForm({ onSuccess }: GitOrganizationFormProps) {
       });
 
       // Get the callback URL for this app
-      const redirectUri = `${window.location.origin}/oauth/git/callback`;
+      const redirectUri = `${globalThis.location.origin}/oauth/git/callback`;
 
       // Initiate OAuth flow
       const { data, error } = await supabase.functions.invoke('git-oauth/initiate', {
@@ -163,7 +169,7 @@ export function GitOrganizationForm({ onSuccess }: GitOrganizationFormProps) {
       }));
 
       // Redirect to OAuth provider
-      window.location.href = data.auth_url;
+      globalThis.location.href = data.auth_url;
     } catch (error) {
       console.error('OAuth initiation failed:', error);
       toast.error('Failed to start OAuth flow');
@@ -387,17 +393,11 @@ export function GitOrganizationForm({ onSuccess }: GitOrganizationFormProps) {
                     Create an OAuth application in your Git provider with this callback URL:
                   </p>
                   <code className="block bg-background p-2 rounded text-xs break-all">
-                    {window.location.origin}/oauth/git/callback
+                    {globalThis.location.origin}/oauth/git/callback
                   </code>
                   <div className="mt-2">
                     <a
-                      href={
-                        selectedOAuthProvider === 'github'
-                          ? 'https://github.com/settings/developers'
-                          : selectedOAuthProvider === 'gitlab'
-                          ? `${oauthForm.watch('host_url')}/-/profile/applications`
-                          : 'https://bitbucket.org/account/settings/app-authorizations/'
-                      }
+                      href={getOAuthAppUrl(selectedOAuthProvider, oauthForm.watch('host_url'))}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-primary hover:underline inline-flex items-center gap-1"
