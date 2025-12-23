@@ -197,8 +197,9 @@ export function TimeTrackingSection({
           <div className="space-y-4 pt-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Hours</Label>
+                <Label htmlFor="log-hours">Hours</Label>
                 <Input
+                  id="log-hours"
                   type="number"
                   min="0"
                   placeholder="0"
@@ -207,8 +208,9 @@ export function TimeTrackingSection({
                 />
               </div>
               <div className="space-y-2">
-                <Label>Minutes</Label>
+                <Label htmlFor="log-minutes">Minutes</Label>
                 <Input
+                  id="log-minutes"
                   type="number"
                   min="0"
                   max="59"
@@ -219,16 +221,18 @@ export function TimeTrackingSection({
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Date</Label>
+              <Label htmlFor="log-date">Date</Label>
               <Input
+                id="log-date"
                 type="date"
                 value={newLog.date}
                 onChange={(e) => setNewLog({ ...newLog, date: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label>Description (optional)</Label>
+              <Label htmlFor="log-description">Description (optional)</Label>
               <Textarea
+                id="log-description"
                 placeholder="What did you work on?"
                 value={newLog.description}
                 onChange={(e) => setNewLog({ ...newLog, description: e.target.value })}

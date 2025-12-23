@@ -120,12 +120,13 @@ export function RepositorySettingsModal({
           {/* Active Toggle */}
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Repository Active</Label>
+              <Label htmlFor="repo-active">Repository Active</Label>
               <p className="text-sm text-muted-foreground">
                 Disable to pause webhook processing for this repository
               </p>
             </div>
             <Switch
+              id="repo-active"
               checked={isActive}
               onCheckedChange={setIsActive}
             />

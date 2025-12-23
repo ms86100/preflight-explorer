@@ -317,28 +317,30 @@ export default function ComponentsPage() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Name</Label>
+              <Label htmlFor="component-name">Name</Label>
               <Input
+                id="component-name"
                 placeholder="e.g., Backend API"
                 value={newComponent.name}
                 onChange={(e) => setNewComponent(prev => ({ ...prev, name: e.target.value }))}
               />
             </div>
             <div className="space-y-2">
-              <Label>Description</Label>
+              <Label htmlFor="component-description">Description</Label>
               <Textarea
+                id="component-description"
                 placeholder="What does this component cover?"
                 value={newComponent.description}
                 onChange={(e) => setNewComponent(prev => ({ ...prev, description: e.target.value }))}
               />
             </div>
             <div className="space-y-2">
-              <Label>Component Lead</Label>
+              <Label htmlFor="component-lead">Component Lead</Label>
               <Select 
                 value={newComponent.lead_id} 
                 onValueChange={(value) => setNewComponent(prev => ({ ...prev, lead_id: value }))}
               >
-                <SelectTrigger>
+                <SelectTrigger id="component-lead">
                   <SelectValue placeholder="Select a lead (optional)" />
                 </SelectTrigger>
                 <SelectContent>

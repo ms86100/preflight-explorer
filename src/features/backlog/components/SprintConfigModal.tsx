@@ -115,23 +115,23 @@ export function SprintConfigModal({ open, onOpenChange }: SprintConfigModalProps
           {/* Auto Estimate */}
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Auto-calculate capacity</Label>
+              <Label htmlFor="auto-estimate">Auto-calculate capacity</Label>
               <p className="text-xs text-muted-foreground">
                 Estimate sprint capacity based on team velocity
               </p>
             </div>
-            <Switch checked={autoEstimate} onCheckedChange={setAutoEstimate} />
+            <Switch id="auto-estimate" checked={autoEstimate} onCheckedChange={setAutoEstimate} />
           </div>
 
           {/* Capacity Tracking */}
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Team capacity tracking</Label>
+              <Label htmlFor="capacity-tracking">Team capacity tracking</Label>
               <p className="text-xs text-muted-foreground">
                 Track individual team member availability
               </p>
             </div>
-            <Switch checked={capacityTracking} onCheckedChange={setCapacityTracking} />
+            <Switch id="capacity-tracking" checked={capacityTracking} onCheckedChange={setCapacityTracking} />
           </div>
         </div>
 

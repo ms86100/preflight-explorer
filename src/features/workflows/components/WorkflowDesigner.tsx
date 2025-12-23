@@ -266,8 +266,9 @@ export function WorkflowDesigner({ workflowId }: WorkflowDesignerProps) {
       setNewStatusName('');
       setNewStatusColor('#6B7280');
       setIsCreateStatusOpen(false);
-    } catch (error) {
-      // Error already handled by the hook
+    } catch (error: unknown) {
+      // Error already handled by the hook - logging for debugging
+      console.debug('Status creation error (handled by hook):', error);
     }
   };
 

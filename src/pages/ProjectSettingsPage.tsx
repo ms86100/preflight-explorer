@@ -335,7 +335,7 @@ export default function ProjectSettingsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Classification Level</Label>
+                  <Label id="classification-level-label">Classification Level</Label>
                   <div className="grid gap-2 md:grid-cols-2">
                     {CLASSIFICATION_LEVELS.map((level) => (
                       <div

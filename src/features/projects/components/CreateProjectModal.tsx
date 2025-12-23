@@ -263,12 +263,12 @@ export function CreateProjectModal({ open, onOpenChange, onSubmit }: CreateProje
             </div>
 
             <div className="space-y-2">
-              <Label>Security Classification *</Label>
+              <Label htmlFor="security-classification">Security Classification *</Label>
               <Select
                 value={selectedClassification}
                 onValueChange={(value) => setValue('classification', value as ClassificationLevel)}
               >
-                <SelectTrigger>
+                <SelectTrigger id="security-classification">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -304,12 +304,12 @@ export function CreateProjectModal({ open, onOpenChange, onSubmit }: CreateProje
             </div>
 
             <div className="space-y-2">
-              <Label>Program Association</Label>
+              <Label htmlFor="program-association">Program Association</Label>
               <Select
                 value={watch('program_id') || ''}
                 onValueChange={(value) => setValue('program_id', value)}
               >
-                <SelectTrigger>
+                <SelectTrigger id="program-association">
                   <SelectValue placeholder="Select a program (optional)" />
                 </SelectTrigger>
                 <SelectContent>

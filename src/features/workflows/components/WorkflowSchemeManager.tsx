@@ -448,9 +448,9 @@ export function WorkflowSchemeManager() {
           </DialogHeader>
           <div className="space-y-4 mt-4">
             <div className="space-y-2">
-              <Label>Project</Label>
+              <Label htmlFor="assign-project">Project</Label>
               <Select value={assignProjectId} onValueChange={setAssignProjectId}>
-                <SelectTrigger>
+                <SelectTrigger id="assign-project">
                   <SelectValue placeholder="Select a project" />
                 </SelectTrigger>
                 <SelectContent>
@@ -466,9 +466,9 @@ export function WorkflowSchemeManager() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Workflow Scheme</Label>
+              <Label htmlFor="assign-scheme">Workflow Scheme</Label>
               <Select value={assignSchemeId} onValueChange={setAssignSchemeId}>
-                <SelectTrigger>
+                <SelectTrigger id="assign-scheme">
                   <SelectValue placeholder="Select a scheme" />
                 </SelectTrigger>
                 <SelectContent>
