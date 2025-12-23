@@ -183,6 +183,10 @@ export function TeamManager({ projectId, isProjectAdmin: isProjectAdminProp }: T
                   selectedTeam?.id === team.id ? 'border-primary bg-muted/30' : ''
                 }`}
                 onClick={() => setSelectedTeam(team)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedTeam(team); } }}
+                tabIndex={0}
+                role="button"
+                aria-label={`Select team: ${team.name}`}
               >
                 <CardHeader className="p-4">
                   <div className="flex items-center justify-between">
@@ -541,6 +545,10 @@ function AddMemberDialog({
                     selectedUser === user.id ? 'bg-muted' : ''
                   }`}
                   onClick={() => setSelectedUser(user.id)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedUser(user.id); } }}
+                  tabIndex={0}
+                  role="option"
+                  aria-selected={selectedUser === user.id}
                 >
                   <Avatar className="h-8 w-8">
                     <AvatarFallback>

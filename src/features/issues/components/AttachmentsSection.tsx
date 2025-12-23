@@ -306,6 +306,10 @@ export function AttachmentsSection({ issueId }: AttachmentsSectionProps) {
                 key={attachment.id}
                 className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
                 onClick={() => handlePreview(attachment)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handlePreview(attachment); } }}
+                tabIndex={0}
+                role="button"
+                aria-label={`Preview attachment: ${attachment.filename}`}
               >
                 <FileIcon className="h-8 w-8 text-muted-foreground flex-shrink-0" />
                 <div className="flex-1 min-w-0">

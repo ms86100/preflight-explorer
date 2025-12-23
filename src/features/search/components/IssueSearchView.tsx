@@ -337,6 +337,10 @@ export function IssueSearchView() {
                     <TableHead 
                       className="cursor-pointer hover:bg-muted/50"
                       onClick={() => handleSort('issue_key')}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort('issue_key'); } }}
+                      tabIndex={0}
+                      role="button"
+                      aria-label="Sort by Key"
                     >
                       Key
                       <ArrowUpDown className="h-3 w-3 inline ml-1" />
@@ -344,6 +348,10 @@ export function IssueSearchView() {
                     <TableHead 
                       className="cursor-pointer hover:bg-muted/50"
                       onClick={() => handleSort('summary')}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort('summary'); } }}
+                      tabIndex={0}
+                      role="button"
+                      aria-label="Sort by Summary"
                     >
                       Summary
                       <ArrowUpDown className="h-3 w-3 inline ml-1" />
@@ -352,6 +360,10 @@ export function IssueSearchView() {
                     <TableHead 
                       className="cursor-pointer hover:bg-muted/50"
                       onClick={() => handleSort('status')}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort('status'); } }}
+                      tabIndex={0}
+                      role="button"
+                      aria-label="Sort by Status"
                     >
                       Status
                       <ArrowUpDown className="h-3 w-3 inline ml-1" />
@@ -359,6 +371,10 @@ export function IssueSearchView() {
                     <TableHead 
                       className="cursor-pointer hover:bg-muted/50"
                       onClick={() => handleSort('priority')}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort('priority'); } }}
+                      tabIndex={0}
+                      role="button"
+                      aria-label="Sort by Priority"
                     >
                       P
                       <ArrowUpDown className="h-3 w-3 inline ml-1" />
@@ -367,6 +383,10 @@ export function IssueSearchView() {
                     <TableHead 
                       className="cursor-pointer hover:bg-muted/50"
                       onClick={() => handleSort('updated_at')}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort('updated_at'); } }}
+                      tabIndex={0}
+                      role="button"
+                      aria-label="Sort by Updated"
                     >
                       Updated
                       <ArrowUpDown className="h-3 w-3 inline ml-1" />
@@ -390,6 +410,10 @@ export function IssueSearchView() {
                         key={issue.id}
                         className="cursor-pointer hover:bg-muted/50"
                         onClick={() => setSelectedIssueId(issue.id)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedIssueId(issue.id); } }}
+                        tabIndex={0}
+                        role="button"
+                        aria-label={`View issue ${issue.issue_key}: ${issue.summary}`}
                       >
                         <TableCell>
                           <div

@@ -71,7 +71,14 @@ export default function Dashboard() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setIsCreateProjectOpen(true)}>
+            <Card 
+              className="hover:shadow-md transition-shadow cursor-pointer" 
+              onClick={() => setIsCreateProjectOpen(true)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsCreateProjectOpen(true); } }}
+              tabIndex={0}
+              role="button"
+              aria-label="Create Project"
+            >
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Plus className="h-6 w-6 text-primary" />
@@ -83,7 +90,14 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/projects')}>
+            <Card 
+              className="hover:shadow-md transition-shadow cursor-pointer" 
+              onClick={() => navigate('/projects')}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/projects'); } }}
+              tabIndex={0}
+              role="button"
+              aria-label="View All Projects"
+            >
               <CardContent className="flex items-center gap-4 p-4">
                 <div className="w-12 h-12 rounded-lg bg-success/10 flex items-center justify-center">
                   <FolderKanban className="h-6 w-6 text-success" />
