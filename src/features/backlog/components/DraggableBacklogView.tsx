@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { SprintActivityFeed } from './SprintActivityFeed';
+import { SprintHistoryPage } from './SprintHistoryPage';
 import {
   Plus,
   Search,
@@ -23,6 +23,7 @@ import {
   Pencil,
   ArrowLeftRight,
   Settings2,
+  History,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,6 +63,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AppLayout } from '@/components/layout';
 import { ClassificationBadge } from '@/components/compliance/ClassificationBanner';
 import { CreateIssueModal, IssueDetailModal, useIssuesByProject, useStatuses, useDeleteIssue, useUpdateIssue } from '@/features/issues';
@@ -134,6 +136,7 @@ interface TeamMember {
 export function DraggableBacklogView() {
   const { projectKey } = useParams<{ projectKey: string }>();
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState<'backlog' | 'history'>('backlog');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIssues, setSelectedIssues] = useState<Set<string>>(new Set());
   const [expandedSprints, setExpandedSprints] = useState<Set<string>>(new Set(['backlog']));
@@ -769,103 +772,123 @@ export function DraggableBacklogView() {
           {/* Toolbar */}
           <div className="flex items-center justify-between p-4 border-b border-border bg-background">
             <div className="flex items-center gap-4">
-              <h1 className="text-xl font-semibold">Backlog</h1>
+              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'backlog' | 'history')}>
+                <TabsList>
+                  <TabsTrigger value="backlog" className="gap-2">
+                    <Layers className="h-4 w-4" />
+                    Backlog
+                  </TabsTrigger>
+                  <TabsTrigger value="history" className="gap-2">
+                    <History className="h-4 w-4" />
+                    Sprint History
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
 
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search backlog..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 w-64"
-                />
-              </div>
-
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filters
-              </Button>
-            </div>
-
-            <div className="flex items-center gap-2">
-              {boardId && (
-                <SprintActivityFeed boardId={boardId} projectKey={projectKey || ''} />
-              )}
-              <Button variant="outline" size="sm" onClick={() => setIsSprintConfigOpen(true)}>
-                <Settings2 className="h-4 w-4 mr-2" />
-                Sprint Settings
-              </Button>
-              <Button variant="outline" size="sm" onClick={openCreateSprintModal}>
-                <Calendar className="h-4 w-4 mr-2" />
-                Create Sprint
-              </Button>
-              <Button size="sm" onClick={() => openCreateIssue()}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Issue
-              </Button>
-            </div>
-          </div>
-
-          {/* Backlog Content */}
-          <div className="flex-1 overflow-auto p-4">
-            {/* Sprint sections */}
-            {sprintSections.map(renderSprintSection)}
-
-            {/* Backlog section */}
-            <section 
-              aria-label="Backlog items"
-              className={`border rounded-lg overflow-hidden transition-all ${
-                dragOverTarget === 'backlog' ? 'ring-2 ring-primary border-primary bg-primary/5' : ''
-              }`}
-              onDragOver={(e) => handleDragOver(e, 'backlog')}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, 'backlog')}
-            >
-              <Collapsible open={expandedSprints.has('backlog')} onOpenChange={() => toggleSprint('backlog')}>
-                <div className="flex items-center gap-3 px-4 py-3 bg-muted/30">
-                  <CollapsibleTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-6 w-6">
-                      {expandedSprints.has('backlog') ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                    </Button>
-                  </CollapsibleTrigger>
-
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold">Backlog</h3>
-                      <span className="text-xs text-muted-foreground">
-                        {filteredBacklogIssues.length} issues • {filteredBacklogIssues.reduce((sum, i) => sum + (i.story_points || 0), 0)} points
-                      </span>
-                    </div>
+              {activeTab === 'backlog' && (
+                <>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search backlog..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9 w-64"
+                    />
                   </div>
 
-                  <Button size="sm" variant="ghost" onClick={() => openCreateIssue()}>
-                    <Plus className="h-4 w-4 mr-1" />
-                    Create Issue
+                  <Button variant="outline" size="sm">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filters
                   </Button>
-                </div>
+                </>
+              )}
+            </div>
 
-                <CollapsibleContent>
-                  <div className="divide-y divide-border min-h-[60px]">
-                    {filteredBacklogIssues.length === 0 ? (
-                      <div className="py-12 text-center text-muted-foreground">
-                        <Bookmark className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                        <p className="text-sm">Your backlog is empty</p>
-                        <Button variant="link" size="sm" onClick={() => openCreateIssue()}>
-                          Create your first issue
-                        </Button>
-                      </div>
-                    ) : (
-                      filteredBacklogIssues.map(issue => (
-                        <div key={issue.id} className="group">
-                          {renderIssueRow(issue as BacklogIssue)}
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            </section>
+            {activeTab === 'backlog' && (
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => setIsSprintConfigOpen(true)}>
+                  <Settings2 className="h-4 w-4 mr-2" />
+                  Sprint Settings
+                </Button>
+                <Button variant="outline" size="sm" onClick={openCreateSprintModal}>
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Create Sprint
+                </Button>
+                <Button size="sm" onClick={() => openCreateIssue()}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Issue
+                </Button>
+              </div>
+            )}
           </div>
+
+          {/* Content based on active tab */}
+          {activeTab === 'backlog' ? (
+            <div className="flex-1 overflow-auto p-4">
+              {/* Sprint sections */}
+              {sprintSections.map(renderSprintSection)}
+
+              {/* Backlog section */}
+              <section 
+                aria-label="Backlog items"
+                className={`border rounded-lg overflow-hidden transition-all ${
+                  dragOverTarget === 'backlog' ? 'ring-2 ring-primary border-primary bg-primary/5' : ''
+                }`}
+                onDragOver={(e) => handleDragOver(e, 'backlog')}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, 'backlog')}
+              >
+                <Collapsible open={expandedSprints.has('backlog')} onOpenChange={() => toggleSprint('backlog')}>
+                  <div className="flex items-center gap-3 px-4 py-3 bg-muted/30">
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-6 w-6">
+                        {expandedSprints.has('backlog') ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      </Button>
+                    </CollapsibleTrigger>
+
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold">Backlog</h3>
+                        <span className="text-xs text-muted-foreground">
+                          {filteredBacklogIssues.length} issues • {filteredBacklogIssues.reduce((sum, i) => sum + (i.story_points || 0), 0)} points
+                        </span>
+                      </div>
+                    </div>
+
+                    <Button size="sm" variant="ghost" onClick={() => openCreateIssue()}>
+                      <Plus className="h-4 w-4 mr-1" />
+                      Create Issue
+                    </Button>
+                  </div>
+
+                  <CollapsibleContent>
+                    <div className="divide-y divide-border min-h-[60px]">
+                      {filteredBacklogIssues.length === 0 ? (
+                        <div className="py-12 text-center text-muted-foreground">
+                          <Bookmark className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                          <p className="text-sm">Your backlog is empty</p>
+                          <Button variant="link" size="sm" onClick={() => openCreateIssue()}>
+                            Create your first issue
+                          </Button>
+                        </div>
+                      ) : (
+                        filteredBacklogIssues.map(issue => (
+                          <div key={issue.id} className="group">
+                            {renderIssueRow(issue as BacklogIssue)}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              </section>
+            </div>
+          ) : (
+            <div className="flex-1 overflow-auto p-6">
+              {boardId && <SprintHistoryPage boardId={boardId} projectKey={projectKey || ''} />}
+            </div>
+          )}
         </div>
       </AppLayout>
 
