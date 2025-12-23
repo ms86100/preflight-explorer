@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -36,11 +36,18 @@ import {
 import type { DataBlockSchema, ColumnDefinition, ColumnType } from '../types';
 import { COLUMN_TYPE_LABELS } from '../types';
 
+// Helper function moved outside component to avoid nested function (S2004)
+const incrementSchemaVersion = (version: string): string => {
+  const parts = version.split('.');
+  const minor = parseInt(parts[1] || '0', 10) + 1;
+  return `${parts[0]}.${minor}`;
+};
+
 interface SchemaEditorProps {
-  schemas: DataBlockSchema[];
-  onSchemaCreated: (schema: DataBlockSchema) => void;
-  onSchemaUpdated: (schema: DataBlockSchema) => void;
-  onSchemaDeleted: (id: string) => void;
+  readonly schemas: readonly DataBlockSchema[];
+  readonly onSchemaCreated: (schema: DataBlockSchema) => void;
+  readonly onSchemaUpdated: (schema: DataBlockSchema) => void;
+  readonly onSchemaDeleted: (id: string) => void;
 }
 
 const COLUMN_TYPE_ICONS: Record<ColumnType, React.ReactNode> = {
@@ -137,11 +144,7 @@ export function SchemaEditor({ schemas, onSchemaCreated, onSchemaUpdated, onSche
     setIsDialogOpen(false);
   };
 
-  const incrementVersion = (version: string): string => {
-    const parts = version.split('.');
-    const minor = parseInt(parts[1] || '0', 10) + 1;
-    return `${parts[0]}.${minor}`;
-  };
+  // incrementVersion moved outside component as incrementSchemaVersion
 
   return (
     <div className="space-y-4">

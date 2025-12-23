@@ -40,6 +40,14 @@ const projectSchema = z.object({
 
 type ProjectFormData = z.infer<typeof projectSchema>;
 
+// Helper function moved outside component to avoid nested function (S2004)
+const generateProjectKey = (name: string): string => {
+  return name
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '')
+    .slice(0, 10) || '';
+};
+
 interface CreateProjectModalProps {
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
@@ -98,20 +106,12 @@ export function CreateProjectModal({ open, onOpenChange, onSubmit }: CreateProje
   const selectedClassification = watch('classification');
   const projectName = watch('name');
 
-  // Auto-generate key from name
-  const generateKey = (name: string) => {
-    return name
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, '')
-      .slice(0, 10) || '';
-  };
-
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.value;
     setValue('name', name);
     const currentKey = watch('pkey');
-    if (!currentKey || currentKey === generateKey(projectName)) {
-      setValue('pkey', generateKey(name));
+    if (!currentKey || currentKey === generateProjectKey(projectName)) {
+      setValue('pkey', generateProjectKey(name));
     }
   };
 
