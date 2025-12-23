@@ -226,6 +226,11 @@ export function ExportWizard({ format, onClose, preselectedIssues = [] }: Export
                             : 'hover:bg-muted'
                         }`}
                         onClick={() => handleToggleIssue(issue.id)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleToggleIssue(issue.id); } }}
+                        tabIndex={0}
+                        role="checkbox"
+                        aria-checked={selectedIssues.includes(issue.id)}
+                        aria-label={`Select issue ${issue.key}: ${issue.summary}`}
                       >
                         <Checkbox checked={selectedIssues.includes(issue.id)} />
                         <div className="flex-1">

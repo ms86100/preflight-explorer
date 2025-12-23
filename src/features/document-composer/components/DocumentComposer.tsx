@@ -101,7 +101,14 @@ function ExportFormatCard({ format, title, description, icon, onExport }: Export
   };
 
   return (
-    <Card className="hover:border-primary/50 transition-colors cursor-pointer" onClick={onExport}>
+    <Card 
+      className="hover:border-primary/50 transition-colors cursor-pointer" 
+      onClick={onExport}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onExport(); } }}
+      tabIndex={0}
+      role="button"
+      aria-label={`Export to ${format.toUpperCase()}: ${title}`}
+    >
       <CardHeader>
         <div className={`${colorMap[format]} mb-2`}>{icon}</div>
         <CardTitle className="text-lg">{title}</CardTitle>

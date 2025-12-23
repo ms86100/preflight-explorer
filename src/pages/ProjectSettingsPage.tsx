@@ -346,6 +346,11 @@ export default function ProjectSettingsPage() {
                             : 'hover:bg-accent'
                         }`}
                         onClick={() => setFormData({ ...formData, classification: level })}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFormData({ ...formData, classification: level }); } }}
+                        tabIndex={0}
+                        role="radio"
+                        aria-checked={formData.classification === level}
+                        aria-label={`Classification level: ${level.replace('_', ' ')}`}
                       >
                         <p className="font-medium capitalize">{level.replace('_', ' ')}</p>
                         <p className="text-xs text-muted-foreground">

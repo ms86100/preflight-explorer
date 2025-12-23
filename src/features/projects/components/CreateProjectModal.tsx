@@ -167,6 +167,11 @@ export function CreateProjectModal({ open, onOpenChange, onSubmit }: CreateProje
                   <div
                     key={template.id}
                     onClick={() => setValue('template', template.id)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setValue('template', template.id); } }}
+                    tabIndex={0}
+                    role="radio"
+                    aria-checked={selectedTemplate === template.id}
+                    aria-label={`Select template: ${template.name}`}
                     className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
                       selectedTemplate === template.id
                         ? 'border-primary bg-primary/5'

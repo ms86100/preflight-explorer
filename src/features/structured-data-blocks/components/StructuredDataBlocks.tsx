@@ -92,6 +92,10 @@ export function StructuredDataBlocks() {
                   key={schema.id} 
                   className="cursor-pointer hover:border-primary/50 transition-colors"
                   onClick={() => setSelectedSchema(schema)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedSchema(schema); } }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`Open schema: ${schema.name}`}
                 >
                   <CardHeader>
                     <CardTitle className="text-base flex items-center gap-2">
@@ -127,6 +131,10 @@ export function StructuredDataBlocks() {
               <Card 
                 className="cursor-pointer border-dashed hover:border-primary/50 transition-colors flex items-center justify-center min-h-[180px]"
                 onClick={() => setActiveTab('schemas')}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveTab('schemas'); } }}
+                tabIndex={0}
+                role="button"
+                aria-label="Create new schema"
               >
                 <CardContent className="text-center py-6">
                   <Plus className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
