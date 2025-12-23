@@ -41,9 +41,9 @@ const projectSchema = z.object({
 type ProjectFormData = z.infer<typeof projectSchema>;
 
 interface CreateProjectModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSubmit?: (data: ProjectFormData) => Promise<void>;
+  readonly open: boolean;
+  readonly onOpenChange: (open: boolean) => void;
+  readonly onSubmit?: (data: ProjectFormData) => Promise<void>;
 }
 
 const TEMPLATES = [
