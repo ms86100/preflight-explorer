@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/select';
 import { 
   Plus, FileText, Table, FileType, Pencil, Trash2, Copy, 
-  GripVertical, ChevronDown, ChevronUp
+  GripVertical
 } from 'lucide-react';
 import type { DocumentTemplate, ExportFormat, TemplateSection } from '../types';
 

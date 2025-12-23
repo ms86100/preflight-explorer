@@ -1,12 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
-  X,
-  Link as LinkIcon,
   Paperclip,
   Clock,
   MessageSquare,
   History,
-  MoreHorizontal,
   User,
   Calendar,
   Flag,

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -99,7 +98,7 @@ export function CustomFieldInput({ field, value, onChange, disabled }: CustomFie
       );
 
     case 'date':
-    case 'datetime':
+    case 'datetime': {
       const dateValue = currentValue ? new Date(currentValue as string) : undefined;
       return (
         <div className="space-y-2">
@@ -127,9 +126,10 @@ export function CustomFieldInput({ field, value, onChange, disabled }: CustomFie
                 })}
               />
             </PopoverContent>
-          </Popover>
+        </Popover>
         </div>
       );
+    }
 
     case 'select':
       return (
@@ -154,7 +154,7 @@ export function CustomFieldInput({ field, value, onChange, disabled }: CustomFie
         </div>
       );
 
-    case 'checkbox':
+    case 'checkbox': {
       const isChecked = currentValue === true || currentValue === 'true';
       return (
         <div className="flex items-center space-x-2">
@@ -167,8 +167,9 @@ export function CustomFieldInput({ field, value, onChange, disabled }: CustomFie
           <Label htmlFor={field.id}>{field.name}</Label>
         </div>
       );
+    }
 
-    case 'multiselect':
+    case 'multiselect': {
       const selectedValues = (currentValue as string[]) || [];
       return (
         <div className="space-y-2">
@@ -197,6 +198,7 @@ export function CustomFieldInput({ field, value, onChange, disabled }: CustomFie
           </div>
         </div>
       );
+    }
 
     default:
       return (
