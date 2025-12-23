@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Save, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import {
   Select,
@@ -44,7 +45,7 @@ interface NewMapping {
   target_group_id: string;
 }
 
-export function GroupMappingManager({ configId }: GroupMappingManagerProps) {
+export function GroupMappingManager({ configId }: Readonly<GroupMappingManagerProps>) {
   const [mappings, setMappings] = useState<LdapGroupMapping[]>([]);
   const [groups, setGroups] = useState<{ id: string; name: string }[]>([]);
   const [projectRoles, setProjectRoles] = useState<{ id: string; name: string }[]>([]);
@@ -74,7 +75,8 @@ export function GroupMappingManager({ configId }: GroupMappingManagerProps) {
       setMappings(mappingsData);
       setGroups(groupsData);
       setProjectRoles(rolesData);
-    } catch (error) {
+    } catch (error: unknown) {
+      console.error('Failed to load group mappings:', error);
       toast.error('Failed to load group mappings');
     } finally {
       setIsLoading(false);
@@ -120,7 +122,8 @@ export function GroupMappingManager({ configId }: GroupMappingManagerProps) {
         target_group_id: '',
       });
       toast.success('Group mapping added');
-    } catch (error) {
+    } catch (error: unknown) {
+      console.error('Failed to add mapping:', error);
       toast.error('Failed to add mapping');
     } finally {
       setIsSaving(false);
@@ -131,7 +134,8 @@ export function GroupMappingManager({ configId }: GroupMappingManagerProps) {
     try {
       const updated = await updateGroupMapping(mapping.id, { is_active: !mapping.is_active });
       setMappings(mappings.map(m => m.id === mapping.id ? updated : m));
-    } catch (error) {
+    } catch (error: unknown) {
+      console.error('Failed to update mapping:', error);
       toast.error('Failed to update mapping');
     }
   };
@@ -141,7 +145,8 @@ export function GroupMappingManager({ configId }: GroupMappingManagerProps) {
       await deleteGroupMapping(mappingId);
       setMappings(mappings.filter(m => m.id !== mappingId));
       toast.success('Mapping deleted');
-    } catch (error) {
+    } catch (error: unknown) {
+      console.error('Failed to delete mapping:', error);
       toast.error('Failed to delete mapping');
     }
   };
@@ -179,30 +184,32 @@ export function GroupMappingManager({ configId }: GroupMappingManagerProps) {
         {/* Add new mapping form */}
         <div className="grid grid-cols-5 gap-4 p-4 bg-muted/50 rounded-lg">
           <div className="space-y-1">
-            <label className="text-xs font-medium">LDAP Group Name</label>
+            <Label htmlFor="ldap-group-name" className="text-xs font-medium">LDAP Group Name</Label>
             <Input
+              id="ldap-group-name"
               placeholder="e.g., Developers"
               value={newMapping.ldap_group_name}
               onChange={(e) => setNewMapping({ ...newMapping, ldap_group_name: e.target.value })}
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-medium">LDAP Group DN (Optional)</label>
+            <Label htmlFor="ldap-group-dn" className="text-xs font-medium">LDAP Group DN (Optional)</Label>
             <Input
+              id="ldap-group-dn"
               placeholder="CN=Developers,OU=Groups,..."
               value={newMapping.ldap_group_dn}
               onChange={(e) => setNewMapping({ ...newMapping, ldap_group_dn: e.target.value })}
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-medium">Target Type</label>
+            <Label htmlFor="target-type" className="text-xs font-medium">Target Type</Label>
             <Select
               value={newMapping.target_type}
               onValueChange={(v: 'app_role' | 'project_role' | 'group') => 
                 setNewMapping({ ...newMapping, target_type: v, target_role: '', target_project_role_id: '', target_group_id: '' })
               }
             >
-              <SelectTrigger>
+              <SelectTrigger id="target-type">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -213,7 +220,7 @@ export function GroupMappingManager({ configId }: GroupMappingManagerProps) {
             </Select>
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-medium">Target</label>
+            <Label htmlFor="target-value" className="text-xs font-medium">Target</Label>
             {newMapping.target_type === 'app_role' && (
               <Select
                 value={newMapping.target_role}

@@ -497,6 +497,177 @@ async function importUsers(
 // deno-lint-ignore no-explicit-any
 declare const EdgeRuntime: any;
 
+// Helper functions to reduce cognitive complexity of main handler
+
+interface AuthResult {
+  userId: string | null;
+  error: string | null;
+}
+
+async function authenticateRequest(
+  req: Request,
+  supabaseUrl: string,
+  supabaseAnonKey: string
+): Promise<AuthResult> {
+  const authHeader = req.headers.get('authorization');
+  if (!authHeader) {
+    return { userId: null, error: 'Unauthorized' };
+  }
+
+  const token = authHeader.replace('Bearer ', '');
+  const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+    global: {
+      headers: { Authorization: `Bearer ${token}` }
+    }
+  });
+  
+  const { data: { user }, error: authError } = await authClient.auth.getUser();
+  if (authError) {
+    console.error('[csv-import] Auth error:', authError.message);
+  }
+  
+  return { userId: user?.id || null, error: user?.id ? null : 'Unauthorized' };
+}
+
+function createErrorResponse(message: string, status: number): Response {
+  return new Response(
+    JSON.stringify({ error: message }),
+    { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  );
+}
+
+function createSuccessResponse(data: unknown): Response {
+  return new Response(
+    JSON.stringify(data),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  );
+}
+
+async function handleValidateAction(
+  supabase: SupabaseClient,
+  csvData: string | undefined,
+  importType: 'issues' | 'projects' | 'users' | undefined,
+  fieldMappings: Record<string, string> | undefined
+): Promise<Response> {
+  if (!csvData || !importType || !fieldMappings) {
+    return createErrorResponse('Missing required fields: csvData, importType, fieldMappings', 400);
+  }
+  const result = await validateCSV(supabase, csvData, fieldMappings, importType);
+  return createSuccessResponse(result);
+}
+
+async function handleGetStatusAction(
+  supabase: SupabaseClient,
+  jobId: string | undefined
+): Promise<Response> {
+  if (!jobId) {
+    return createErrorResponse('Missing jobId', 400);
+  }
+
+  const { data: job } = await supabase
+    .from('import_jobs')
+    .select('*')
+    .eq('id', jobId)
+    .single();
+
+  const { data: errors } = await supabase
+    .from('import_errors')
+    .select('*')
+    .eq('job_id', jobId)
+    .order('row_number')
+    .limit(100);
+
+  return createSuccessResponse({ job, errors });
+}
+
+async function processImportJob(
+  supabase: SupabaseClient,
+  jobId: string,
+  csvData: string,
+  userId: string
+): Promise<void> {
+  try {
+    const { data: job, error: jobError } = await supabase
+      .from('import_jobs')
+      .select('*')
+      .eq('id', jobId)
+      .single();
+
+    if (jobError || !job) {
+      console.error(`[csv-import] Job ${jobId} not found`);
+      return;
+    }
+
+    const jobData = job as { import_type: string; field_mappings: Record<string, string> };
+    let result: { success: number; failed: number };
+
+    switch (jobData.import_type) {
+      case 'issues':
+        result = await importIssues(supabase, csvData, jobData.field_mappings, jobId, userId);
+        break;
+      case 'projects':
+        result = await importProjects(supabase, csvData, jobData.field_mappings, jobId, userId);
+        break;
+      case 'users':
+        result = await importUsers(supabase, csvData, jobData.field_mappings, jobId);
+        break;
+      default:
+        throw new Error(`Unknown import type: ${jobData.import_type}`);
+    }
+
+    await supabase.from('import_jobs').update({
+      status: 'completed',
+      successful_records: result.success,
+      failed_records: result.failed,
+      processed_records: result.success + result.failed,
+      completed_at: new Date().toISOString()
+    }).eq('id', jobId);
+
+    console.log(`[csv-import] Job ${jobId} completed: ${result.success} success, ${result.failed} failed`);
+  } catch (err) {
+    console.error(`[csv-import] Job ${jobId} failed:`, err);
+    await supabase.from('import_jobs').update({
+      status: 'failed',
+      error_message: err instanceof Error ? err.message : 'Unknown error',
+      completed_at: new Date().toISOString()
+    }).eq('id', jobId);
+  }
+}
+
+async function handleImportAction(
+  supabase: SupabaseClient,
+  jobId: string | undefined,
+  csvData: string | undefined,
+  userId: string
+): Promise<Response> {
+  if (!jobId) {
+    return createErrorResponse('Missing jobId', 400);
+  }
+
+  const { data: job, error: jobError } = await supabase
+    .from('import_jobs')
+    .select('*')
+    .eq('id', jobId)
+    .single();
+
+  if (jobError || !job) {
+    return createErrorResponse('Import job not found', 404);
+  }
+
+  await supabase.from('import_jobs').update({
+    status: 'importing',
+    started_at: new Date().toISOString()
+  }).eq('id', jobId);
+
+  const importPromise = processImportJob(supabase, jobId, csvData!, userId);
+
+  if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
+    EdgeRuntime.waitUntil(importPromise);
+  }
+
+  return createSuccessResponse({ message: 'Import started', jobId });
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -506,173 +677,34 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    
-    // Use anon key client for auth verification
-    const authHeader = req.headers.get('authorization');
-    let userId: string | null = null;
 
-    if (authHeader) {
-      const token = authHeader.replace('Bearer ', '');
-      // Create a client with the user's token for auth verification
-      const authClient = createClient(supabaseUrl, supabaseAnonKey, {
-        global: {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      });
-      const { data: { user }, error: authError } = await authClient.auth.getUser();
-      if (authError) {
-        console.error('[csv-import] Auth error:', authError.message);
-      }
-      userId = user?.id || null;
-    }
-
-    if (!userId) {
+    const authResult = await authenticateRequest(req, supabaseUrl, supabaseAnonKey);
+    if (!authResult.userId) {
       console.error('[csv-import] No valid user found from auth header');
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return createErrorResponse('Unauthorized', 401);
     }
 
-    // Use service role client for database operations (bypasses RLS)
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
     const body: ImportRequest = await req.json();
     const { action, jobId, importType, csvData, fieldMappings } = body;
 
     console.log(`[csv-import] Action: ${action}, Import Type: ${importType}, Job ID: ${jobId}`);
 
-    if (action === 'validate') {
-      if (!csvData || !importType || !fieldMappings) {
-        return new Response(
-          JSON.stringify({ error: 'Missing required fields: csvData, importType, fieldMappings' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      const result = await validateCSV(supabase, csvData, fieldMappings, importType);
-      
-      return new Response(
-        JSON.stringify(result),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    switch (action) {
+      case 'validate':
+        return handleValidateAction(supabase, csvData, importType, fieldMappings);
+      case 'import':
+        return handleImportAction(supabase, jobId, csvData, authResult.userId);
+      case 'get-status':
+        return handleGetStatusAction(supabase, jobId);
+      default:
+        return createErrorResponse('Invalid action', 400);
     }
-
-    if (action === 'import') {
-      if (!jobId) {
-        return new Response(
-          JSON.stringify({ error: 'Missing jobId' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      // Get job details
-      const { data: job, error: jobError } = await supabase
-        .from('import_jobs')
-        .select('*')
-        .eq('id', jobId)
-        .single();
-
-      if (jobError || !job) {
-        return new Response(
-          JSON.stringify({ error: 'Import job not found' }),
-          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      // Update status to importing
-      await supabase.from('import_jobs').update({
-        status: 'importing',
-        started_at: new Date().toISOString()
-      }).eq('id', jobId);
-
-      // Process import in background
-      const importPromise = (async () => {
-        try {
-          let result: { success: number; failed: number };
-          const jobData = job as { import_type: string; field_mappings: Record<string, string> };
-
-          switch (jobData.import_type) {
-            case 'issues':
-              result = await importIssues(supabase, csvData!, jobData.field_mappings, jobId, userId);
-              break;
-            case 'projects':
-              result = await importProjects(supabase, csvData!, jobData.field_mappings, jobId, userId);
-              break;
-            case 'users':
-              result = await importUsers(supabase, csvData!, jobData.field_mappings, jobId);
-              break;
-            default:
-              throw new Error(`Unknown import type: ${jobData.import_type}`);
-          }
-
-          await supabase.from('import_jobs').update({
-            status: 'completed',
-            successful_records: result.success,
-            failed_records: result.failed,
-            processed_records: result.success + result.failed,
-            completed_at: new Date().toISOString()
-          }).eq('id', jobId);
-
-          console.log(`[csv-import] Job ${jobId} completed: ${result.success} success, ${result.failed} failed`);
-        } catch (err) {
-          console.error(`[csv-import] Job ${jobId} failed:`, err);
-          await supabase.from('import_jobs').update({
-            status: 'failed',
-            error_message: err instanceof Error ? err.message : 'Unknown error',
-            completed_at: new Date().toISOString()
-          }).eq('id', jobId);
-        }
-      })();
-
-      // Use waitUntil for background processing
-      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
-        EdgeRuntime.waitUntil(importPromise);
-      }
-
-      return new Response(
-        JSON.stringify({ message: 'Import started', jobId }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    if (action === 'get-status') {
-      if (!jobId) {
-        return new Response(
-          JSON.stringify({ error: 'Missing jobId' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      const { data: job } = await supabase
-        .from('import_jobs')
-        .select('*')
-        .eq('id', jobId)
-        .single();
-
-      const { data: errors } = await supabase
-        .from('import_errors')
-        .select('*')
-        .eq('job_id', jobId)
-        .order('row_number')
-        .limit(100);
-
-      return new Response(
-        JSON.stringify({ job, errors }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    return new Response(
-      JSON.stringify({ error: 'Invalid action' }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
   } catch (error) {
     console.error('[csv-import] Error:', error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Internal server error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    return createErrorResponse(
+      error instanceof Error ? error.message : 'Internal server error',
+      500
     );
   }
 });
