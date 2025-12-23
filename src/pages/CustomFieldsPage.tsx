@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { AppLayout } from '@/components/layout/AppLayout';
 import { CustomFieldsManager } from '@/features/custom-fields';
 

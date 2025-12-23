@@ -72,8 +72,8 @@ export function TimeTrackingSection({
   const handleAddWorklog = async () => {
     if (!user?.id) return;
 
-    const hours = parseInt(newLog.hours) || 0;
-    const minutes = parseInt(newLog.minutes) || 0;
+    const hours = Number.parseInt(newLog.hours, 10) || 0;
+    const minutes = Number.parseInt(newLog.minutes, 10) || 0;
     const totalMinutes = hours * 60 + minutes;
 
     if (totalMinutes <= 0) {

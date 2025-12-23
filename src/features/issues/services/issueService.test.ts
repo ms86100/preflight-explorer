@@ -190,23 +190,34 @@ describe('IssueFilters interface', () => {
   });
 });
 
+// Helper functions moved to module scope (S7721/S2004 fix)
+const validateSummary = (summary: string): boolean => {
+  return summary.trim().length > 0;
+};
+
+const validateStoryPoints = (points: number | undefined): boolean => {
+  if (points === undefined) return true;
+  return points >= 0;
+};
+
+const validateIssueKey = (key: string): boolean => {
+  return /^[A-Z][A-Z0-9]+-\d+$/.test(key);
+};
+
+const validateDueDate = (date: string | undefined): boolean => {
+  if (!date) return true;
+  const parsed = Date.parse(date);
+  return !Number.isNaN(parsed);
+};
+
 describe('Issue validation', () => {
   it('should validate summary is not empty', () => {
-    const validateSummary = (summary: string): boolean => {
-      return summary.trim().length > 0;
-    };
-    
     expect(validateSummary('Valid summary')).toBe(true);
     expect(validateSummary('')).toBe(false);
     expect(validateSummary('   ')).toBe(false);
   });
 
   it('should validate story points are positive', () => {
-    const validateStoryPoints = (points: number | undefined): boolean => {
-      if (points === undefined) return true;
-      return points >= 0;
-    };
-    
     expect(validateStoryPoints(5)).toBe(true);
     expect(validateStoryPoints(0)).toBe(true);
     expect(validateStoryPoints(undefined)).toBe(true);
@@ -214,10 +225,6 @@ describe('Issue validation', () => {
   });
 
   it('should validate issue key format', () => {
-    const validateIssueKey = (key: string): boolean => {
-      return /^[A-Z][A-Z0-9]+-\d+$/.test(key);
-    };
-    
     expect(validateIssueKey('DEMO-1')).toBe(true);
     expect(validateIssueKey('ABC123-456')).toBe(true);
     expect(validateIssueKey('demo-1')).toBe(false);
@@ -226,12 +233,6 @@ describe('Issue validation', () => {
   });
 
   it('should validate due date format', () => {
-    const validateDueDate = (date: string | undefined): boolean => {
-      if (!date) return true;
-      const parsed = Date.parse(date);
-      return !Number.isNaN(parsed);
-    };
-    
     expect(validateDueDate('2024-12-31')).toBe(true);
     expect(validateDueDate('2024-12-31T00:00:00Z')).toBe(true);
     expect(validateDueDate(undefined)).toBe(true);

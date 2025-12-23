@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { AppLayout } from '@/components/layout/AppLayout';
 import { DocumentComposer } from '@/features/document-composer';
 import { StructuredDataBlocks } from '@/features/structured-data-blocks';

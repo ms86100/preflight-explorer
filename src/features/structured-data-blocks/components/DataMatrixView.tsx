@@ -78,7 +78,7 @@ export function DataMatrixView({ schema, onBack }: DataMatrixViewProps) {
 
       if (col.type === 'number' && value !== undefined && value !== '') {
         const numValue = Number(value);
-        if (isNaN(numValue)) {
+        if (Number.isNaN(numValue)) {
           errors.push({
             rowId: editingRow?.id || 'new',
             columnKey: col.key,
