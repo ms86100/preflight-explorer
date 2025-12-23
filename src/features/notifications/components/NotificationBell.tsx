@@ -120,6 +120,10 @@ export function NotificationBell() {
                     notification.is_read ? '' : 'bg-primary/5'
                   }`}
                   onClick={() => markAsRead(notification.id)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); markAsRead(notification.id); } }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`Mark notification "${notification.title}" as read`}
                 >
                   <div className="mt-0.5">
                     {getTypeIcon(notification.type)}

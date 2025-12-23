@@ -60,6 +60,10 @@ export function IssueCard({ issue, isDragging, onSelect }: IssueCardProps) {
   return (
     <div
       onClick={onSelect}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(); } }}
+      tabIndex={0}
+      role="button"
+      aria-label={`Issue ${issue.issue_key}: ${issue.summary}`}
       className={`issue-card group relative ${
         isDragging ? 'shadow-lg ring-2 ring-primary opacity-90' : ''
       }`}

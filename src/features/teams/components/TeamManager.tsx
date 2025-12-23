@@ -3,6 +3,7 @@ import { Plus, Users, Trash2, Edit2, UserPlus, Crown, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -519,8 +520,9 @@ function AddMemberDialog({
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium">Search User</label>
+            <Label htmlFor="user-search">Search User</Label>
             <Input
+              id="user-search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by name or email..."
@@ -558,7 +560,7 @@ function AddMemberDialog({
             )}
           </div>
           <div>
-            <label className="text-sm font-medium">Role</label>
+            <Label htmlFor="member-role">Role</Label>
             <Select value={role} onValueChange={(v: 'lead' | 'member') => setRole(v)}>
               <SelectTrigger>
                 <SelectValue />

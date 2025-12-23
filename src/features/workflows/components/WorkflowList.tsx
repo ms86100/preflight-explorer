@@ -238,6 +238,11 @@ export function WorkflowList({ projectId, onSelectWorkflow, selectedWorkflowId }
                   ${selectedWorkflowId === workflow.id ? 'bg-muted border-primary' : 'border-border'}
                 `}
                 onClick={() => onSelectWorkflow(workflow.id)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectWorkflow(workflow.id); } }}
+                tabIndex={0}
+                role="button"
+                aria-label={`Select workflow: ${workflow.name}`}
+                aria-pressed={selectedWorkflowId === workflow.id}
               >
                 <div className="flex items-center gap-3">
                   <Settings className="h-5 w-5 text-muted-foreground" />

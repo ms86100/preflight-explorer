@@ -81,7 +81,8 @@ export default function AutomationPage() {
   const [logs, setLogs] = useState<AutomationLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [, setEditingRule] = useState<AutomationRule | null>(null);
+  const [editingRule, setEditingRule] = useState<AutomationRule | null>(null);
+  // Note: editingRule is used by handlers below
   const [formData, setFormData] = useState({
     name: '',
     description: '',

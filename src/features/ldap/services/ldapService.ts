@@ -23,12 +23,15 @@ export async function fetchLdapConfiguration(id: string): Promise<LdapConfigurat
 }
 
 export async function createLdapConfiguration(config: Partial<LdapConfiguration>): Promise<LdapConfiguration> {
+  if (!config.name || !config.server_url || !config.base_dn) {
+    throw new Error('Required fields missing: name, server_url, base_dn');
+  }
   const { data, error } = await supabase
     .from('ldap_configurations')
     .insert({
-      name: config.name!,
-      server_url: config.server_url!,
-      base_dn: config.base_dn!,
+      name: config.name,
+      server_url: config.server_url,
+      base_dn: config.base_dn,
       bind_dn: config.bind_dn,
       port: config.port,
       use_ssl: config.use_ssl,
@@ -84,13 +87,16 @@ export async function fetchGroupMappings(configId: string): Promise<LdapGroupMap
 }
 
 export async function createGroupMapping(mapping: Partial<LdapGroupMapping>): Promise<LdapGroupMapping> {
+  if (!mapping.ldap_config_id || !mapping.ldap_group_dn || !mapping.ldap_group_name || !mapping.target_type) {
+    throw new Error('Required fields missing: ldap_config_id, ldap_group_dn, ldap_group_name, target_type');
+  }
   const { data, error } = await supabase
     .from('ldap_group_mappings')
     .insert({
-      ldap_config_id: mapping.ldap_config_id!,
-      ldap_group_dn: mapping.ldap_group_dn!,
-      ldap_group_name: mapping.ldap_group_name!,
-      target_type: mapping.target_type!,
+      ldap_config_id: mapping.ldap_config_id,
+      ldap_group_dn: mapping.ldap_group_dn,
+      ldap_group_name: mapping.ldap_group_name,
+      target_type: mapping.target_type,
       target_role: mapping.target_role,
       target_project_role_id: mapping.target_project_role_id,
       target_group_id: mapping.target_group_id,

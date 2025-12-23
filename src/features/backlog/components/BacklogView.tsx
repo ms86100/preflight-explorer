@@ -121,7 +121,8 @@ export function BacklogView() {
   const [selectedIssues, setSelectedIssues] = useState<Set<string>>(new Set());
   const [expandedSprints, setExpandedSprints] = useState<Set<string>>(new Set(['backlog']));
   const [isCreateIssueOpen, setIsCreateIssueOpen] = useState(false);
-  const [, setIsSprintPlanningOpen] = useState(false);
+  const [isSprintPlanningOpen, setIsSprintPlanningOpen] = useState(false);
+  // Note: isSprintPlanningOpen is used by handlers below
   const [createIssueContext, setCreateIssueContext] = useState<string | undefined>();
   
   // Issue detail modal state
