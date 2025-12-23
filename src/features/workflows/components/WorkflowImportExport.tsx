@@ -285,8 +285,9 @@ export function WorkflowImportExport({
           
           <div className="space-y-4 mt-4">
             <div className="space-y-2">
-              <Label>Upload JSON File</Label>
+              <Label htmlFor="workflow-file-upload">Upload JSON File</Label>
               <input
+                id="workflow-file-upload"
                 type="file"
                 ref={fileInputRef}
                 accept=".json"

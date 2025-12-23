@@ -332,16 +332,18 @@ export default function ReleasesPage() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Name</Label>
+              <Label htmlFor="version-name">Name</Label>
               <Input
+                id="version-name"
                 placeholder="e.g., v1.0.0"
                 value={newVersion.name}
                 onChange={(e) => setNewVersion(prev => ({ ...prev, name: e.target.value }))}
               />
             </div>
             <div className="space-y-2">
-              <Label>Description</Label>
+              <Label htmlFor="version-description">Description</Label>
               <Textarea
+                id="version-description"
                 placeholder="What's in this release?"
                 value={newVersion.description}
                 onChange={(e) => setNewVersion(prev => ({ ...prev, description: e.target.value }))}
@@ -349,10 +351,10 @@ export default function ReleasesPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Start Date</Label>
+                <Label htmlFor="version-start-date">Start Date</Label>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start">
+                    <Button id="version-start-date" variant="outline" className="w-full justify-start">
                       <CalendarIcon className="h-4 w-4 mr-2" />
                       {newVersion.startDate ? format(newVersion.startDate, 'MMM d, yyyy') : 'Select'}
                     </Button>
@@ -367,10 +369,10 @@ export default function ReleasesPage() {
                 </Popover>
               </div>
               <div className="space-y-2">
-                <Label>Release Date</Label>
+                <Label htmlFor="version-release-date">Release Date</Label>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start">
+                    <Button id="version-release-date" variant="outline" className="w-full justify-start">
                       <CalendarIcon className="h-4 w-4 mr-2" />
                       {newVersion.releaseDate ? format(newVersion.releaseDate, 'MMM d, yyyy') : 'Select'}
                     </Button>

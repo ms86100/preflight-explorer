@@ -211,12 +211,12 @@ export function CustomFieldsManager() {
               </div>
 
               <div className="space-y-2">
-                <Label>Field Type</Label>
+                <Label htmlFor="field-type">Field Type</Label>
                 <Select
                   value={formData.field_type}
                   onValueChange={(value: FieldType) => setFormData(prev => ({ ...prev, field_type: value }))}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="field-type">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -243,7 +243,7 @@ export function CustomFieldsManager() {
 
               {needsOptions && (
                 <div className="space-y-2">
-                  <Label>Options</Label>
+                  <Label htmlFor="field-options">Options</Label>
                   <div className="space-y-2">
                     {formData.options.map((opt, index) => (
                       <div key={index} className="flex items-center gap-2">

@@ -66,10 +66,10 @@ export function SprintPlanningModal({
         <div className="space-y-4 mt-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Start Date</Label>
+              <Label htmlFor="sprint-start-date">Start Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start">
+                  <Button id="sprint-start-date" variant="outline" className="w-full justify-start">
                     <CalendarIcon className="h-4 w-4 mr-2" />
                     {format(startDate, 'MMM d, yyyy')}
                   </Button>
@@ -85,10 +85,10 @@ export function SprintPlanningModal({
             </div>
 
             <div className="space-y-2">
-              <Label>End Date</Label>
+              <Label htmlFor="sprint-end-date">End Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start">
+                  <Button id="sprint-end-date" variant="outline" className="w-full justify-start">
                     <CalendarIcon className="h-4 w-4 mr-2" />
                     {format(endDate, 'MMM d, yyyy')}
                   </Button>
@@ -105,8 +105,9 @@ export function SprintPlanningModal({
           </div>
 
           <div className="space-y-2">
-            <Label>Sprint Goal (optional)</Label>
+            <Label htmlFor="sprint-goal">Sprint Goal (optional)</Label>
             <Textarea
+              id="sprint-goal"
               placeholder="What do you want to accomplish in this sprint?"
               value={goal}
               onChange={(e) => setGoal(e.target.value)}

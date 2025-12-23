@@ -203,9 +203,9 @@ export function LinkedIssuesSection({ issueId, projectId }: LinkedIssuesSectionP
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <div className="space-y-2">
-              <Label>Link Type</Label>
+              <Label htmlFor="link-type">Link Type</Label>
               <Select value={linkType} onValueChange={setLinkType}>
-                <SelectTrigger>
+                <SelectTrigger id="link-type">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -219,8 +219,9 @@ export function LinkedIssuesSection({ issueId, projectId }: LinkedIssuesSectionP
             </div>
 
             <div className="space-y-2">
-              <Label>Search Issue</Label>
+              <Label htmlFor="search-issue">Search Issue</Label>
               <Input
+                id="search-issue"
                 placeholder="Search by key or summary..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}

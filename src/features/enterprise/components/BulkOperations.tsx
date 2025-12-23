@@ -138,9 +138,9 @@ export function BulkOperations({ projectId, selectedIssueIds, onSelectionChange 
                 </DialogHeader>
                 <div className="space-y-4 mt-4">
                   <div className="space-y-2">
-                    <Label>Operation</Label>
+                    <Label htmlFor="bulk-operation">Operation</Label>
                     <Select value={operation} onValueChange={setOperation}>
-                      <SelectTrigger>
+                      <SelectTrigger id="bulk-operation">
                         <SelectValue placeholder="Select operation" />
                       </SelectTrigger>
                       <SelectContent>
@@ -154,9 +154,9 @@ export function BulkOperations({ projectId, selectedIssueIds, onSelectionChange 
 
                   {operation === 'status' && (
                     <div className="space-y-2">
-                      <Label>New Status</Label>
+                      <Label htmlFor="new-status">New Status</Label>
                       <Select value={targetValue} onValueChange={setTargetValue}>
-                        <SelectTrigger>
+                        <SelectTrigger id="new-status">
                           <SelectValue placeholder="Select status" />
                         </SelectTrigger>
                         <SelectContent>
@@ -178,9 +178,9 @@ export function BulkOperations({ projectId, selectedIssueIds, onSelectionChange 
 
                   {operation === 'priority' && (
                     <div className="space-y-2">
-                      <Label>New Priority</Label>
+                      <Label htmlFor="new-priority">New Priority</Label>
                       <Select value={targetValue} onValueChange={setTargetValue}>
-                        <SelectTrigger>
+                        <SelectTrigger id="new-priority">
                           <SelectValue placeholder="Select priority" />
                         </SelectTrigger>
                         <SelectContent>

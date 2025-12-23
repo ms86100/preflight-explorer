@@ -254,7 +254,7 @@ export function SchemaEditor({ schemas, onSchemaCreated, onSchemaUpdated, onSche
             </div>
 
             <div className="space-y-4">
-              <Label>Columns</Label>
+              <Label id="schema-columns-label">Columns</Label>
               
               {formData.columns.length > 0 && (
                 <div className="space-y-2">
