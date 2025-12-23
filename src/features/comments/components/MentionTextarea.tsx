@@ -195,7 +195,11 @@ export function MentionTextarea({
                   index === selectedIndex ? 'bg-accent' : 'hover:bg-muted'
                 }`}
                 onClick={() => insertMention(user)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); insertMention(user); } }}
                 onMouseEnter={() => setSelectedIndex(index)}
+                tabIndex={0}
+                role="option"
+                aria-selected={index === selectedIndex}
               >
                 <Avatar className="h-6 w-6">
                   <AvatarImage src={user.avatar_url || undefined} />

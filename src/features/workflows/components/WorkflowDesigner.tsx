@@ -411,6 +411,10 @@ export function WorkflowDesigner({ workflowId }: WorkflowDesignerProps) {
           className="relative bg-muted/30 rounded-lg border border-border overflow-hidden"
           style={{ height: 500, minWidth: 900 }}
           onClick={handleCanvasClick}
+          onKeyDown={(e) => { if (e.key === 'Escape') { setConnectionState(null); } }}
+          tabIndex={0}
+          role="application"
+          aria-label="Workflow designer canvas"
         >
           {/* Grid pattern */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none">
@@ -525,6 +529,10 @@ export function WorkflowDesigner({ workflowId }: WorkflowDesignerProps) {
                     }}
                     onMouseDown={(e) => handleStepMouseDown(step, e)}
                     onClick={() => handleStepClick(step)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleStepClick(step); } }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`Workflow step: ${step.status?.name}`}
                   >
                     <div className="flex items-center gap-2 p-3">
                       <GripVertical className="h-4 w-4 opacity-50 cursor-grab" />

@@ -124,6 +124,10 @@ export function LdapConfigurationList({ onSelect, onNew }: LdapConfigurationList
               key={config.id} 
               className="cursor-pointer hover:border-primary/50 transition-colors"
               onClick={() => onSelect(config)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(config); } }}
+              tabIndex={0}
+              role="button"
+              aria-label={`Select ${config.name} configuration`}
             >
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between">

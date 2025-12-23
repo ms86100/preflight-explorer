@@ -178,6 +178,11 @@ export function WorkflowSchemeManager() {
                         selectedSchemeId === scheme.id ? "bg-muted border-primary" : "border-border"
                       )}
                       onClick={() => setSelectedSchemeId(scheme.id)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedSchemeId(scheme.id); } }}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`Select workflow scheme: ${scheme.name}`}
+                      aria-pressed={selectedSchemeId === scheme.id}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">

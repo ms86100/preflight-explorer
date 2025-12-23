@@ -235,6 +235,10 @@ export function LinkedIssuesSection({ issueId, projectId }: LinkedIssuesSectionP
                         selectedIssue === issue.id ? 'bg-accent' : ''
                       }`}
                       onClick={() => setSelectedIssue(issue.id)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedIssue(issue.id); } }}
+                      tabIndex={0}
+                      role="option"
+                      aria-selected={selectedIssue === issue.id}
                     >
                       <span className="font-medium text-primary">{issue.issue_key}</span>
                       <span className="text-sm text-muted-foreground ml-2">{issue.summary}</span>

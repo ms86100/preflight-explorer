@@ -23,9 +23,8 @@ export function usePagination(options: UsePaginationOptions = {}): UsePagination
   const { initialPage = 1, initialPageSize = DEFAULT_PAGE_SIZE } = options;
 
   const [page, setPageState] = useState(initialPage);
-  const [pageSize, setPageSizeState] = useState(
-    Math.min(Math.max(1, initialPageSize), MAX_PAGE_SIZE)
-  );
+  const initialValidPageSize = Math.min(Math.max(1, initialPageSize), MAX_PAGE_SIZE);
+  const [pageSize, setPageSizeState] = useState(initialValidPageSize);
 
   const setPage = useCallback((newPage: number) => {
     setPageState(Math.max(1, newPage));

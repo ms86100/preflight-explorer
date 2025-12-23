@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -147,7 +148,7 @@ export function DataExportControls() {
             </DialogHeader>
             <div className="space-y-4 mt-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Export Type</label>
+                <Label htmlFor="export-type">Export Type</Label>
                 <Select value={exportType} onValueChange={setExportType}>
                   <SelectTrigger>
                     <SelectValue />
@@ -162,7 +163,7 @@ export function DataExportControls() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Classification Level</label>
+                <Label htmlFor="classification-level">Classification Level</Label>
                 <Select value={classificationLevel} onValueChange={setClassificationLevel}>
                   <SelectTrigger>
                     <SelectValue />
@@ -177,7 +178,7 @@ export function DataExportControls() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">File Format</label>
+                <Label htmlFor="file-format">File Format</Label>
                 <Select value={fileFormat} onValueChange={setFileFormat}>
                   <SelectTrigger>
                     <SelectValue />

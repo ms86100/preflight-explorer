@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
@@ -198,7 +199,7 @@ export function LdapSyncPanel({ configId }: LdapSyncPanelProps) {
                 <div className="space-y-4">
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <label className="text-sm font-medium">JSON Data</label>
+                      <Label htmlFor="sync-json-data">JSON Data</Label>
                       <Button 
                         size="sm" 
                         variant="ghost" 
@@ -209,6 +210,7 @@ export function LdapSyncPanel({ configId }: LdapSyncPanelProps) {
                       </Button>
                     </div>
                     <Textarea
+                      id="sync-json-data"
                       value={syncData}
                       onChange={(e) => setSyncData(e.target.value)}
                       placeholder={sampleData}
