@@ -237,12 +237,12 @@ export default function PluginsPage() {
 }
 
 interface PluginCardProps {
-  plugin: Plugin;
-  onToggle: () => void;
-  isToggling?: boolean;
+  readonly plugin: Plugin;
+  readonly onToggle: () => void;
+  readonly isToggling?: boolean;
 }
 
-function PluginCard({ plugin, onToggle, isToggling }: PluginCardProps) {
+function PluginCard({ plugin, onToggle, isToggling }: Readonly<PluginCardProps>) {
   const CategoryIcon = CATEGORY_ICONS[plugin.category] || Puzzle;
 
   return (

@@ -59,12 +59,12 @@ import {
 } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { AppLayout } from '@/components/layout';
 import { ClassificationBadge } from '@/components/compliance/ClassificationBanner';
-import { CreateIssueModal, IssueDetailModal } from '@/features/issues';
+import { CreateIssueModal, IssueDetailModal, useIssuesByProject, useStatuses, useDeleteIssue, useUpdateIssue } from '@/features/issues';
 import { useProject } from '@/features/projects';
-import { useIssuesByProject, useStatuses, useDeleteIssue, useUpdateIssue } from '@/features/issues';
-import { useBoardsByProject, useSprintsByBoard, useSprintIssues, useCreateSprint, useStartSprint, useCompleteSprint, useAddIssueToSprint, useRemoveIssueFromSprint, useUpdateSprint, useDeleteSprint, useMoveIssuesToBacklog } from '@/features/boards';
+import { useBoardsByProject, useSprintsByBoard, useCreateSprint, useStartSprint, useCompleteSprint, useAddIssueToSprint, useUpdateSprint, useDeleteSprint, useMoveIssuesToBacklog } from '@/features/boards';
 import { SprintPlanningModal } from './SprintPlanningModal';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -341,7 +341,7 @@ export function BacklogView() {
               View details
             </DropdownMenuItem>
             
-            {sprints && sprints.filter(s => s.state !== 'closed').length > 0 ? (
+            {sprints && sprints.some(s => s.state !== 'closed') ? (
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
                   <ArrowRight className="h-4 w-4 mr-2" />
@@ -744,8 +744,9 @@ export function BacklogView() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Name</label>
+              <Label htmlFor="sprint-name" className="text-sm font-medium">Name</Label>
               <Input
+                id="sprint-name"
                 value={editSprintName}
                 onChange={(e) => setEditSprintName(e.target.value)}
                 placeholder="Sprint name"
@@ -753,8 +754,9 @@ export function BacklogView() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium">Goal</label>
+              <Label htmlFor="sprint-goal" className="text-sm font-medium">Goal</Label>
               <Input
+                id="sprint-goal"
                 value={editSprintGoal}
                 onChange={(e) => setEditSprintGoal(e.target.value)}
                 placeholder="Sprint goal (optional)"

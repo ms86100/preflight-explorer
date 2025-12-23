@@ -1,18 +1,13 @@
 // Plugin types and registry definitions
 // Open for extension - new plugins can be registered without modifying core
 
-export type PluginKey = 
-  | 'com.jira.core'
-  | 'com.jira.agile'
-  | 'com.jira.workflow'
-  | 'com.jira.automation'
-  | 'com.jira.customfields'
-  | 'com.jira.reports'
-  | 'com.jira.admin'
-  | 'com.app.document-composer'
-  | 'com.app.structured-data-blocks'
-  | 'com.app.guided-operations'
-  | string; // Allow extension with new plugin keys
+// Known plugin keys - use string type directly for extensibility
+// Specific keys are documented here for reference:
+// - 'com.jira.core', 'com.jira.agile', 'com.jira.workflow'
+// - 'com.jira.automation', 'com.jira.customfields', 'com.jira.reports'
+// - 'com.jira.admin', 'com.app.document-composer'
+// - 'com.app.structured-data-blocks', 'com.app.guided-operations'
+export type PluginKey = string;
 
 export interface Plugin {
   id: string;
