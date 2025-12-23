@@ -341,7 +341,7 @@ export function BacklogView() {
               View details
             </DropdownMenuItem>
             
-            {sprints && sprints.some(s => s.state !== 'closed') ? (
+            {sprints?.some(s => s.state !== 'closed') ? (
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
                   <ArrowRight className="h-4 w-4 mr-2" />

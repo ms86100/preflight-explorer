@@ -198,12 +198,12 @@ export function GitUserMappingManager() {
 
   const filteredMappings = mappings?.filter(m =>
     m.git_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (m.git_name && m.git_name.toLowerCase().includes(searchTerm.toLowerCase()))
+    m.git_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const filteredUnmapped = unmappedAuthors?.filter(a =>
     a.git_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (a.git_name && a.git_name.toLowerCase().includes(searchTerm.toLowerCase()))
+    a.git_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loadingMappings) {

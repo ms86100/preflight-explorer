@@ -273,15 +273,25 @@ export function IssueDetailModal({ issueId, open, onOpenChange }: IssueDetailMod
 
   const IssueIcon = issue?.issue_type?.name ? ISSUE_TYPE_ICONS[issue.issue_type.name] || CheckSquare : CheckSquare;
 
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
-        {isLoading ? (
-          <div className="flex items-center justify-center h-full">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
-        ) : issue ? (
-          <>
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      );
+    }
+
+    if (!issue) {
+      return (
+        <div className="flex items-center justify-center h-full text-muted-foreground">
+          Issue not found
+        </div>
+      );
+    }
+
+    return (
+      <>
             <SheetHeader className="pb-4">
               <div className="flex items-center gap-3">
                 <div
@@ -618,11 +628,13 @@ export function IssueDetailModal({ issueId, open, onOpenChange }: IssueDetailMod
               </TabsContent>
             </Tabs>
           </>
-        ) : (
-          <div className="flex items-center justify-center h-full text-muted-foreground">
-            Issue not found
-          </div>
-        )}
+        );
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
+        {renderContent()}
       </SheetContent>
     </Sheet>
   );

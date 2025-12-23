@@ -49,10 +49,9 @@ export function SyncStatusIndicator({ organization, onSyncComplete }: SyncStatus
     ? formatDistanceToNow(new Date(lastSyncAt), { addSuffix: true })
     : null;
 
-  return (
-    <div className="flex items-center gap-2">
-      {/* Status Badge */}
-      {hasError ? (
+  const renderStatusBadge = () => {
+    if (hasError) {
+      return (
         <Tooltip>
           <TooltipTrigger>
             <Badge variant="outline" className="gap-1 bg-red-500/10 text-red-600 border-red-500/20">
@@ -65,24 +64,37 @@ export function SyncStatusIndicator({ organization, onSyncComplete }: SyncStatus
             <p className="text-sm text-muted-foreground">{lastSyncError}</p>
           </TooltipContent>
         </Tooltip>
-      ) : neverSynced ? (
+      );
+    }
+    
+    if (neverSynced) {
+      return (
         <Badge variant="outline" className="gap-1 bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
           <Clock className="h-3 w-3" />
           Never synced
         </Badge>
-      ) : (
-        <Tooltip>
-          <TooltipTrigger>
-            <Badge variant="outline" className="gap-1 bg-green-500/10 text-green-600 border-green-500/20">
-              <CheckCircle2 className="h-3 w-3" />
-              Synced
-            </Badge>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Last synced {timeAgo}</p>
-          </TooltipContent>
-        </Tooltip>
-      )}
+      );
+    }
+    
+    return (
+      <Tooltip>
+        <TooltipTrigger>
+          <Badge variant="outline" className="gap-1 bg-green-500/10 text-green-600 border-green-500/20">
+            <CheckCircle2 className="h-3 w-3" />
+            Synced
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Last synced {timeAgo}</p>
+        </TooltipContent>
+      </Tooltip>
+    );
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      {/* Status Badge */}
+      {renderStatusBadge()}
 
       {/* Last Sync Time */}
       {timeAgo && !hasError && (

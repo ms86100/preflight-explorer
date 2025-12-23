@@ -244,13 +244,13 @@ describe('Structured Data Validation', () => {
         break;
 
       case 'number':
-        if (typeof value !== 'number' || isNaN(value)) {
+        if (typeof value !== 'number' || Number.isNaN(value)) {
           return { valid: false, error: `${column.name} must be a number` };
         }
         break;
 
       case 'date':
-        if (typeof value !== 'string' || isNaN(Date.parse(value))) {
+        if (typeof value !== 'string' || Number.isNaN(Date.parse(value))) {
           return { valid: false, error: `${column.name} must be a valid date` };
         }
         break;
@@ -377,7 +377,7 @@ describe('Structured Data Helpers', () => {
    * Generates a new row ID.
    */
   function generateRowId(): string {
-    return `row-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `row-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
   }
 
   describe('generateRowId', () => {
@@ -486,7 +486,7 @@ describe('Structured Data Helpers', () => {
         numStr += expr[pos++];
       }
       if (!numStr) throw new Error('Expected number');
-      return parseFloat(numStr);
+      return Number.parseFloat(numStr);
     }
 
     function parseFactor(): number {
@@ -569,7 +569,7 @@ describe('Structured Data Helpers', () => {
   ): { sum: number; avg: number; min: number; max: number; count: number } {
     const values = rows
       .map((r) => r.values[columnId])
-      .filter((v): v is number => typeof v === 'number' && !isNaN(v));
+      .filter((v): v is number => typeof v === 'number' && !Number.isNaN(v));
     
     if (values.length === 0) {
       return { sum: 0, avg: 0, min: 0, max: 0, count: 0 };
