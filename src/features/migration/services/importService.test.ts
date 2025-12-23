@@ -321,58 +321,59 @@ describe('Import Types', () => {
 // Field Mapping Tests
 // ============================================================================
 
-describe('Field Mapping', () => {
-  /** Target fields for issues import */
-  const issueTargetFields = [
-    'summary',
-    'description',
-    'issue_type',
-    'status',
-    'priority',
-    'assignee',
-    'reporter',
-    'due_date',
-    'story_points',
-    'labels',
-    'components',
-  ];
+/** Target fields for issues import */
+const issueTargetFields = [
+  'summary',
+  'description',
+  'issue_type',
+  'status',
+  'priority',
+  'assignee',
+  'reporter',
+  'due_date',
+  'story_points',
+  'labels',
+  'components',
+];
 
-  /**
-   * Suggests field mapping based on header similarity.
-   */
-  function suggestMapping(
-    header: string,
-    targetFields: string[]
-  ): string | null {
-    const normalized = header.toLowerCase().replace(/[^a-z0-9]/g, '');
-    
-    // Direct match
-    for (const field of targetFields) {
-      if (field.replace(/_/g, '') === normalized) {
-        return field;
-      }
+/**
+ * Suggests field mapping based on header similarity (moved to module scope - S7721 fix).
+ */
+function suggestMapping(
+  header: string,
+  targetFields: string[]
+): string | null {
+  const normalized = header.toLowerCase().replace(/[^a-z0-9]/g, '');
+  
+  // Direct match
+  for (const field of targetFields) {
+    if (field.replace(/_/g, '') === normalized) {
+      return field;
     }
-    
-    // Partial match
-    const mappings: Record<string, string[]> = {
-      summary: ['title', 'name', 'subject'],
-      description: ['desc', 'details', 'body', 'content'],
-      issue_type: ['type', 'issuetype', 'category'],
-      priority: ['prio', 'importance', 'urgency'],
-      assignee: ['assigned', 'owner', 'assignedto'],
-      reporter: ['author', 'creator', 'createdby'],
-      due_date: ['due', 'duedate', 'deadline'],
-      story_points: ['points', 'estimate', 'storypoints'],
-    };
-    
-    for (const [field, aliases] of Object.entries(mappings)) {
-      if (aliases.some((alias) => normalized.includes(alias))) {
-        return field;
-      }
-    }
-    
-    return null;
   }
+  
+  // Partial match
+  const mappings: Record<string, string[]> = {
+    summary: ['title', 'name', 'subject'],
+    description: ['desc', 'details', 'body', 'content'],
+    issue_type: ['type', 'issuetype', 'category'],
+    priority: ['prio', 'importance', 'urgency'],
+    assignee: ['assigned', 'owner', 'assignedto'],
+    reporter: ['author', 'creator', 'createdby'],
+    due_date: ['due', 'duedate', 'deadline'],
+    story_points: ['points', 'estimate', 'storypoints'],
+  };
+  
+  for (const [field, aliases] of Object.entries(mappings)) {
+    if (aliases.some((alias) => normalized.includes(alias))) {
+      return field;
+    }
+  }
+  
+  return null;
+}
+
+describe('Field Mapping', () => {
 
   describe('suggestMapping', () => {
     it('should match exact field names', () => {
@@ -404,58 +405,58 @@ describe('Field Mapping', () => {
       expect(suggestMapping('RandomColumn', issueTargetFields)).toBeNull();
     });
   });
+});
 
-  /**
-   * Validates field mappings for completeness.
-   */
-  function validateMappings(
-    mappings: Record<string, string>,
-    requiredFields: string[]
-  ): { valid: boolean; missing: string[] } {
-    const mappedTargets = new Set(Object.values(mappings));
-    const missing = requiredFields.filter((field) => !mappedTargets.has(field));
-    
-    return {
-      valid: missing.length === 0,
-      missing,
+/**
+ * Validates field mappings for completeness (moved to module scope - S7721 fix).
+ */
+function validateMappings(
+  mappings: Record<string, string>,
+  requiredFields: string[]
+): { valid: boolean; missing: string[] } {
+  const mappedTargets = new Set(Object.values(mappings));
+  const missing = requiredFields.filter((field) => !mappedTargets.has(field));
+  
+  return {
+    valid: missing.length === 0,
+    missing,
+  };
+}
+
+describe('Field Mapping Validation', () => {
+  it('should validate complete mappings', () => {
+    const mappings = {
+      Title: 'summary',
+      Type: 'issue_type',
+      Status: 'status',
     };
-  }
-
-  describe('validateMappings', () => {
-    it('should validate complete mappings', () => {
-      const mappings = {
-        Title: 'summary',
-        Type: 'issue_type',
-        Status: 'status',
-      };
-      const required = ['summary', 'issue_type', 'status'];
-      
-      expect(validateMappings(mappings, required)).toEqual({
-        valid: true,
-        missing: [],
-      });
+    const required = ['summary', 'issue_type', 'status'];
+    
+    expect(validateMappings(mappings, required)).toEqual({
+      valid: true,
+      missing: [],
     });
+  });
 
-    it('should detect missing required fields', () => {
-      const mappings = {
-        Title: 'summary',
-      };
-      const required = ['summary', 'issue_type', 'status'];
-      
-      expect(validateMappings(mappings, required)).toEqual({
-        valid: false,
-        missing: ['issue_type', 'status'],
-      });
+  it('should detect missing required fields', () => {
+    const mappings = {
+      Title: 'summary',
+    };
+    const required = ['summary', 'issue_type', 'status'];
+    
+    expect(validateMappings(mappings, required)).toEqual({
+      valid: false,
+      missing: ['issue_type', 'status'],
     });
+  });
 
-    it('should handle empty mappings', () => {
-      const mappings = {};
-      const required = ['summary'];
-      
-      expect(validateMappings(mappings, required)).toEqual({
-        valid: false,
-        missing: ['summary'],
-      });
+  it('should handle empty mappings', () => {
+    const mappings = {};
+    const required = ['summary'];
+    
+    expect(validateMappings(mappings, required)).toEqual({
+      valid: false,
+      missing: ['summary'],
     });
   });
 });
@@ -464,47 +465,45 @@ describe('Field Mapping', () => {
 // Progress Calculation Tests
 // ============================================================================
 
-describe('Progress Calculation', () => {
-  /**
-   * Calculates import progress percentage.
-   */
-  function calculateProgress(job: ImportJob): number {
-    if (job.status === 'completed') return 100;
-    if (job.status === 'pending' || job.status === 'validated') return 0;
-    if (!job.total_records || !job.processed_records) return 0;
-    
-    return Math.round((job.processed_records / job.total_records) * 100);
-  }
+/**
+ * Calculates import progress percentage (moved to module scope - S7721 fix).
+ */
+function calculateProgress(job: ImportJob): number {
+  if (job.status === 'completed') return 100;
+  if (job.status === 'pending' || job.status === 'validated') return 0;
+  if (!job.total_records || !job.processed_records) return 0;
+  
+  return Math.round((job.processed_records / job.total_records) * 100);
+}
 
-  describe('calculateProgress', () => {
-    it('should return 100 for completed jobs', () => {
-      const job: ImportJob = {
-        id: '1', user_id: 'u', import_type: 'issues', file_name: null,
-        status: 'completed', total_records: 100, processed_records: 100,
-        successful_records: 100, failed_records: 0, field_mappings: null,
-        created_at: '', started_at: null, completed_at: null, error_message: null,
-      };
-      expect(calculateProgress(job)).toBe(100);
-    });
+describe('calculateProgress', () => {
+  it('should return 100 for completed jobs', () => {
+    const job: ImportJob = {
+      id: '1', user_id: 'u', import_type: 'issues', file_name: null,
+      status: 'completed', total_records: 100, processed_records: 100,
+      successful_records: 100, failed_records: 0, field_mappings: null,
+      created_at: '', started_at: null, completed_at: null, error_message: null,
+    };
+    expect(calculateProgress(job)).toBe(100);
+  });
 
-    it('should return 0 for pending jobs', () => {
-      const job: ImportJob = {
-        id: '1', user_id: 'u', import_type: 'issues', file_name: null,
-        status: 'pending', total_records: null, processed_records: null,
-        successful_records: null, failed_records: null, field_mappings: null,
-        created_at: '', started_at: null, completed_at: null, error_message: null,
-      };
-      expect(calculateProgress(job)).toBe(0);
-    });
+  it('should return 0 for pending jobs', () => {
+    const job: ImportJob = {
+      id: '1', user_id: 'u', import_type: 'issues', file_name: null,
+      status: 'pending', total_records: null, processed_records: null,
+      successful_records: null, failed_records: null, field_mappings: null,
+      created_at: '', started_at: null, completed_at: null, error_message: null,
+    };
+    expect(calculateProgress(job)).toBe(0);
+  });
 
-    it('should calculate progress for processing jobs', () => {
-      const job: ImportJob = {
-        id: '1', user_id: 'u', import_type: 'issues', file_name: null,
-        status: 'processing', total_records: 100, processed_records: 50,
-        successful_records: 48, failed_records: 2, field_mappings: null,
-        created_at: '', started_at: null, completed_at: null, error_message: null,
-      };
-      expect(calculateProgress(job)).toBe(50);
-    });
+  it('should calculate progress for processing jobs', () => {
+    const job: ImportJob = {
+      id: '1', user_id: 'u', import_type: 'issues', file_name: null,
+      status: 'processing', total_records: 100, processed_records: 50,
+      successful_records: 48, failed_records: 2, field_mappings: null,
+      created_at: '', started_at: null, completed_at: null, error_message: null,
+    };
+    expect(calculateProgress(job)).toBe(50);
   });
 });

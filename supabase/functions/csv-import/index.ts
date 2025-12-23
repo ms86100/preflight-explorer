@@ -121,7 +121,7 @@ function validateRow(
 
   // Type-specific validations
   if (importType === 'issues') {
-    if (mappedData.story_points && isNaN(Number(mappedData.story_points))) {
+    if (mappedData.story_points && Number.isNaN(Number(mappedData.story_points))) {
       errors.push({
         row: rowIndex,
         field: 'story_points',
@@ -130,7 +130,7 @@ function validateRow(
         originalValue: mappedData.story_points
       });
     }
-    if (mappedData.due_date && isNaN(Date.parse(mappedData.due_date))) {
+    if (mappedData.due_date && Number.isNaN(Date.parse(mappedData.due_date))) {
       errors.push({
         row: rowIndex,
         field: 'due_date',
