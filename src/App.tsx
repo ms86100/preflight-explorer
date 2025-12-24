@@ -28,6 +28,7 @@ import ReleasesPage from "./pages/ReleasesPage";
 import ComponentsPage from "./pages/ComponentsPage";
 import OAuthCallbackPage from "./pages/OAuthCallbackPage";
 import NotFound from "./pages/NotFound";
+
 const queryClient = new QueryClient();
 
 // Protected Route Component
