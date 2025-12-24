@@ -21,6 +21,8 @@ interface ProjectSidebarProps {
   readonly project?: Project;
   readonly isCollapsed?: boolean;
   readonly onToggleCollapse?: () => void;
+  readonly isMobile?: boolean;
+  readonly onNavigate?: () => void;
 }
 
 // Original terminology - legally distinct naming
@@ -36,7 +38,9 @@ const PROJECT_NAV_ITEMS = [
 export function ProjectSidebar({ 
   project, 
   isCollapsed = false, 
-  onToggleCollapse 
+  onToggleCollapse,
+  isMobile = false,
+  onNavigate
 }: ProjectSidebarProps) {
   const location = useLocation();
   const baseUrl = project ? `/projects/${project.pkey}` : '';
@@ -45,12 +49,18 @@ export function ProjectSidebar({
     return location.pathname.includes(`${baseUrl}/${href}`);
   };
 
+  const handleNavigate = () => {
+    if (onNavigate) {
+      onNavigate();
+    }
+  };
+
   return (
     <TooltipProvider delayDuration={0}>
       <aside 
         className={cn(
-          'bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300 ease-in-out',
-          isCollapsed ? 'w-16' : 'w-64'
+          'bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300 ease-in-out h-full',
+          isMobile ? 'w-full' : (isCollapsed ? 'w-16' : 'w-64')
         )}
       >
         {/* Program Header */}
@@ -111,12 +121,13 @@ export function ProjectSidebar({
             const linkContent = (
               <Link
                 to={`${baseUrl}/${item.href}`}
+                onClick={handleNavigate}
                 className={cn(
                   'flex items-center gap-3 px-3 py-2.5 text-sm transition-all duration-200 rounded-lg group',
                   isActive(item.href)
                     ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-sm'
                     : 'text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground',
-                  isCollapsed && 'justify-center px-0'
+                  isCollapsed && !isMobile && 'justify-center px-0'
                 )}
               >
                 <item.icon 
@@ -125,7 +136,7 @@ export function ProjectSidebar({
                     isActive(item.href) ? 'text-primary' : 'text-sidebar-muted group-hover:text-primary'
                   )} 
                 />
-                {!isCollapsed && (
+                {(!isCollapsed || isMobile) && (
                   <div className="flex-1 min-w-0">
                     <span className="block">{item.label}</span>
                   </div>
@@ -154,11 +165,12 @@ export function ProjectSidebar({
 
         {/* Program Settings & Collapse */}
         <div className="border-t border-sidebar-border p-2">
-          {isCollapsed ? (
+          {isCollapsed && !isMobile ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
                   to={`${baseUrl}/settings`}
+                  onClick={handleNavigate}
                   className="flex items-center justify-center p-2.5 text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent/50 rounded-lg transition-colors"
                 >
                   <Settings className="h-5 w-5" />
@@ -169,6 +181,7 @@ export function ProjectSidebar({
           ) : (
             <Link
               to={`${baseUrl}/settings`}
+              onClick={handleNavigate}
               className="flex items-center gap-3 px-3 py-2.5 text-sm transition-colors rounded-lg text-sidebar-foreground hover:bg-sidebar-accent/50"
             >
               <Settings className="h-5 w-5 text-sidebar-muted" />
@@ -176,25 +189,27 @@ export function ProjectSidebar({
             </Link>
           )}
 
-          {/* Collapse Toggle */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onToggleCollapse}
-            className={cn(
-              'w-full mt-1 text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent/50 h-10 rounded-lg transition-all',
-              isCollapsed && 'justify-center'
-            )}
-          >
-            {isCollapsed ? (
-              <ChevronRight className="h-5 w-5" />
-            ) : (
-              <>
-                <ChevronLeft className="h-5 w-5 mr-2" />
-                <span className="text-sm">Collapse</span>
-              </>
-            )}
-          </Button>
+          {/* Collapse Toggle - hide on mobile */}
+          {!isMobile && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggleCollapse}
+              className={cn(
+                'w-full mt-1 text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent/50 h-10 rounded-lg transition-all',
+                isCollapsed && 'justify-center'
+              )}
+            >
+              {isCollapsed ? (
+                <ChevronRight className="h-5 w-5" />
+              ) : (
+                <>
+                  <ChevronLeft className="h-5 w-5 mr-2" />
+                  <span className="text-sm">Collapse</span>
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </aside>
     </TooltipProvider>
