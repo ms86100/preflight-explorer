@@ -4,6 +4,8 @@ import { Header } from './Header';
 import { ProjectSidebar } from './ProjectSidebar';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 
 interface AppLayoutProps {
   readonly children?: React.ReactNode;
@@ -13,8 +15,10 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, showSidebar = true, projectKey }: AppLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const { clearanceLevel } = useAuth();
   const location = useLocation();
+  const isMobile = useIsMobile();
 
   // Check if we're in a project context
   const isProjectView = projectKey || (location.pathname.startsWith('/projects/') && 
@@ -40,17 +44,35 @@ export function AppLayout({ children, showSidebar = true, projectKey }: AppLayou
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
-      <Header />
+      <Header 
+        onMobileSidebarToggle={() => setMobileSidebarOpen(true)} 
+        showMobileSidebarToggle={!!(showSidebar && isProjectView)}
+      />
 
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Project Sidebar - Only show in project context */}
-        {showSidebar && isProjectView && (
+        {/* Project Sidebar - Desktop */}
+        {showSidebar && isProjectView && !isMobile && (
           <ProjectSidebar
             project={mockProject}
             isCollapsed={sidebarCollapsed}
             onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
           />
+        )}
+
+        {/* Project Sidebar - Mobile Sheet */}
+        {showSidebar && isProjectView && isMobile && (
+          <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
+            <SheetContent side="left" className="p-0 w-[280px]">
+              <ProjectSidebar
+                project={mockProject}
+                isCollapsed={false}
+                onToggleCollapse={() => setMobileSidebarOpen(false)}
+                isMobile
+                onNavigate={() => setMobileSidebarOpen(false)}
+              />
+            </SheetContent>
+          </Sheet>
         )}
 
         {/* Main Content */}
