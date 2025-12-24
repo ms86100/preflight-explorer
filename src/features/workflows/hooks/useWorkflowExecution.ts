@@ -101,6 +101,7 @@ export function useAssignWorkflowScheme() {
     onSuccess: ({ boardsUpdated }, { projectId }) => {
       queryClient.invalidateQueries({ queryKey: ['project-workflow-scheme', projectId] });
       queryClient.invalidateQueries({ queryKey: ['boards'] });
+      queryClient.invalidateQueries({ queryKey: ['boardColumns'] });
       queryClient.invalidateQueries({ queryKey: ['board-columns'] });
       toast.success(`Workflow scheme assigned. ${boardsUpdated} board(s) updated.`);
     },

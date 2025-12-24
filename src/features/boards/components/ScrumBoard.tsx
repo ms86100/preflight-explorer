@@ -286,7 +286,7 @@ export function ScrumBoard({
                 issues={getColumnIssues(column)}
                 statusCategory={column.statusCategory}
                 maxIssues={column.maxIssues}
-                statuses={columnStatuses.length > 1 ? columnStatuses : undefined}
+                statuses={columnStatuses}
                 issueStatusMap={issueStatusMap}
                 onIssueSelect={onIssueSelect}
                 onCreateIssue={() => onCreateIssue?.(dropStatusId)}
