@@ -82,9 +82,9 @@ export default function BoardPage() {
   const isLoading = projectsLoading || boardsLoading || columnsLoading || 
     (isScrum && sprintLoading) || issuesLoading || isInitializingColumns;
 
-  // Ensure the board has default columns (required for issues to show up in columns)
+  // Ensure the board has columns - prefer workflow-based generation
   useEffect(() => {
-    if (!board?.id) return;
+    if (!board?.id || !project?.id) return;
     if (columnsLoading) return;
     if (didAttemptInitColumns) return;
 
@@ -97,7 +97,17 @@ export default function BoardPage() {
     const init = async () => {
       setIsInitializingColumns(true);
       try {
-        // Pass the template to create appropriate columns
+        // First try workflow-based column generation
+        try {
+          await boardService.generateColumnsFromWorkflow(board.id, project.id);
+          await refetchColumns();
+          if (!cancelled) setIsInitializingColumns(false);
+          return;
+        } catch (workflowError) {
+          console.log('Workflow-based generation not available, falling back to defaults:', workflowError);
+        }
+
+        // Fallback to template-based default columns
         const templateType = template === 'kanban' ? 'kanban' : template === 'basic' ? 'basic' : 'scrum';
         await boardService.createDefaultColumns(board.id, templateType);
         await refetchColumns();
@@ -113,7 +123,7 @@ export default function BoardPage() {
     return () => {
       cancelled = true;
     };
-  }, [board?.id, columnsLoading, columns?.length, didAttemptInitColumns, refetchColumns, template]);
+  }, [board?.id, project?.id, columnsLoading, columns?.length, didAttemptInitColumns, refetchColumns, template]);
 
   // Real-time subscription for issues - refetch when issues change
   useEffect(() => {

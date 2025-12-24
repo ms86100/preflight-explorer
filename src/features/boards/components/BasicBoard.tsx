@@ -218,7 +218,7 @@ export function BasicBoard({
                 name={column.name}
                 issues={getColumnIssues(column)}
                 statusCategory={column.statusCategory}
-                statuses={columnStatuses.length > 1 ? columnStatuses : undefined}
+                statuses={columnStatuses}
                 issueStatusMap={issueStatusMap}
                 onIssueSelect={onIssueSelect}
                 onCreateIssue={() => onCreateIssue?.(dropStatusId)}
