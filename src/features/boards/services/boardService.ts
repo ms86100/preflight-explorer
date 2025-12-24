@@ -449,6 +449,45 @@ export const boardService = {
       throw new Error('Workflow has no steps defined');
     }
 
+    // Build an ordered list of unique workflow statuses (in workflow order)
+    const workflowStatuses = steps
+      .map((s) => s.status as { id: string; name: string; color: string | null; category: string | null } | null)
+      .filter(Boolean)
+      .filter((s, idx, arr) => arr.findIndex((x) => x?.id === s?.id) === idx) as {
+        id: string;
+        name: string;
+        color: string | null;
+        category: string | null;
+      }[];
+
+    // Also include statuses currently used by issues in the project so issues don't disappear after regeneration
+    const { data: issueStatusRows, error: issueStatusError } = await supabase
+      .from('issues')
+      .select('status_id')
+      .eq('project_id', projectId)
+      .not('status_id', 'is', null);
+
+    if (issueStatusError) throw issueStatusError;
+
+    const workflowStatusIds = new Set(workflowStatuses.map((s) => s.id));
+    const usedStatusIds = new Set<string>((issueStatusRows || []).map((r: any) => r.status_id).filter(Boolean));
+
+    const extraStatusIds = Array.from(usedStatusIds).filter((id) => !workflowStatusIds.has(id));
+
+    let extraStatuses: { id: string; name: string; color: string | null; category: string | null }[] = [];
+    if (extraStatusIds.length > 0) {
+      const { data: extra, error: extraError } = await supabase
+        .from('issue_statuses')
+        .select('id, name, color, category')
+        .in('id', extraStatusIds)
+        .order('position');
+
+      if (extraError) throw extraError;
+      extraStatuses = (extra || []) as any;
+    }
+
+    const statusesToCreate = [...workflowStatuses, ...extraStatuses];
+
     // 4. Get existing columns to preserve WIP limits
     const existingColumns = await this.getColumns(boardId);
     const existingWipLimits = new Map<string, { max: number | null; min: number | null }>();
@@ -482,13 +521,10 @@ export const boardService = {
     let position = 0;
     const createdStatusIds = new Set<string>();
 
-    for (const step of steps) {
+    for (const status of statusesToCreate) {
       // Skip if we already created a column for this status
-      if (createdStatusIds.has(step.status_id)) continue;
-      createdStatusIds.add(step.status_id);
-
-      const status = step.status as { id: string; name: string; color: string | null; category: string | null } | null;
-      if (!status) continue;
+      if (createdStatusIds.has(status.id)) continue;
+      createdStatusIds.add(status.id);
 
       const columnName = status.name;
       const wipLimits = existingWipLimits.get(columnName.toLowerCase());
