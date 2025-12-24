@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,8 +15,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, Trash2, X, GripVertical, AlertTriangle, Loader2 } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { Plus, Trash2, X, GripVertical, AlertTriangle, Loader2, AlertCircle, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { boardService } from '../services/boardService';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface ColumnStatus {
@@ -35,14 +41,21 @@ interface Column {
   statuses: ColumnStatus[];
 }
 
+interface WorkflowTransition {
+  from_status_id: string;
+  to_status_id: string;
+}
+
 interface ColumnConfigPanelProps {
   boardId: string;
+  projectId?: string;
   onColumnsChanged: () => void;
 }
 
-export function ColumnConfigPanel({ boardId, onColumnsChanged }: ColumnConfigPanelProps) {
+export function ColumnConfigPanel({ boardId, projectId, onColumnsChanged }: ColumnConfigPanelProps) {
   const [columns, setColumns] = useState<Column[]>([]);
   const [allStatuses, setAllStatuses] = useState<ColumnStatus[]>([]);
+  const [workflowTransitions, setWorkflowTransitions] = useState<WorkflowTransition[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [newColumnName, setNewColumnName] = useState('');
@@ -50,10 +63,10 @@ export function ColumnConfigPanel({ boardId, onColumnsChanged }: ColumnConfigPan
   const [editingColumnName, setEditingColumnName] = useState('');
   const [deleteColumnId, setDeleteColumnId] = useState<string | null>(null);
 
-  // Load columns and statuses
+  // Load columns, statuses, and workflow transitions
   useEffect(() => {
     loadData();
-  }, [boardId]);
+  }, [boardId, projectId]);
 
   const loadData = async () => {
     setLoading(true);
@@ -77,6 +90,11 @@ export function ColumnConfigPanel({ boardId, onColumnsChanged }: ColumnConfigPan
 
       setColumns(transformedColumns.sort((a, b) => a.position - b.position));
       setAllStatuses(statusesData || []);
+
+      // Load workflow transitions if we have a project
+      if (projectId) {
+        await loadWorkflowTransitions(projectId, statusesData || []);
+      }
     } catch (error) {
       console.error('Failed to load column configuration:', error);
       toast.error('Failed to load column configuration');
@@ -85,9 +103,134 @@ export function ColumnConfigPanel({ boardId, onColumnsChanged }: ColumnConfigPan
     }
   };
 
+  const loadWorkflowTransitions = async (projId: string, statuses: ColumnStatus[]) => {
+    try {
+      // Get project's workflow scheme
+      const { data: schemeData } = await supabase
+        .from('project_workflow_schemes')
+        .select('scheme_id')
+        .eq('project_id', projId)
+        .maybeSingle();
+
+      if (!schemeData?.scheme_id) return;
+
+      // Get workflow mappings for this scheme
+      const { data: mappings } = await supabase
+        .from('workflow_scheme_mappings')
+        .select('workflow_id')
+        .eq('scheme_id', schemeData.scheme_id);
+
+      if (!mappings || mappings.length === 0) return;
+
+      // Get all transitions from all workflows in the scheme
+      const workflowIds = [...new Set(mappings.map(m => m.workflow_id))];
+      
+      const { data: steps } = await supabase
+        .from('workflow_steps')
+        .select('id, status_id, workflow_id')
+        .in('workflow_id', workflowIds);
+
+      const { data: transitions } = await supabase
+        .from('workflow_transitions')
+        .select('from_step_id, to_step_id')
+        .in('workflow_id', workflowIds);
+
+      if (!steps || !transitions) return;
+
+      // Map step IDs to status IDs
+      const stepToStatus = new Map<string, string>();
+      steps.forEach(s => stepToStatus.set(s.id, s.status_id));
+
+      // Convert transitions to status-to-status mappings
+      const statusTransitions: WorkflowTransition[] = transitions
+        .map(t => ({
+          from_status_id: stepToStatus.get(t.from_step_id) || '',
+          to_status_id: stepToStatus.get(t.to_step_id) || '',
+        }))
+        .filter(t => t.from_status_id && t.to_status_id);
+
+      setWorkflowTransitions(statusTransitions);
+    } catch (error) {
+      console.error('Failed to load workflow transitions:', error);
+    }
+  };
+
   // Get unmapped statuses
   const mappedStatusIds = new Set(columns.flatMap(c => c.statuses.map(s => s.id)));
   const unmappedStatuses = allStatuses.filter(s => !mappedStatusIds.has(s.id));
+
+  // Analyze workflow alignment for each column
+  const columnAlignmentWarnings = useMemo(() => {
+    const warnings = new Map<string, string[]>();
+
+    if (workflowTransitions.length === 0) return warnings;
+
+    columns.forEach((column, index) => {
+      const columnWarnings: string[] = [];
+      const columnStatusIds = new Set(column.statuses.map(s => s.id));
+
+      // Check if any status in this column can be reached from previous columns
+      if (index > 0) {
+        const prevColumnStatusIds = new Set(
+          columns.slice(0, index).flatMap(c => c.statuses.map(s => s.id))
+        );
+
+        const hasIncomingTransition = column.statuses.some(status =>
+          workflowTransitions.some(
+            t => t.to_status_id === status.id && prevColumnStatusIds.has(t.from_status_id)
+          )
+        );
+
+        if (!hasIncomingTransition && column.statuses.length > 0) {
+          columnWarnings.push('No workflow transitions lead to this column from previous columns');
+        }
+      }
+
+      // Check if statuses in this column can transition to next columns
+      if (index < columns.length - 1) {
+        const nextColumnStatusIds = new Set(
+          columns.slice(index + 1).flatMap(c => c.statuses.map(s => s.id))
+        );
+
+        const hasOutgoingTransition = column.statuses.some(status =>
+          workflowTransitions.some(
+            t => t.from_status_id === status.id && nextColumnStatusIds.has(t.to_status_id)
+          )
+        );
+
+        if (!hasOutgoingTransition && column.statuses.length > 0) {
+          columnWarnings.push('No workflow transitions lead from this column to next columns');
+        }
+      }
+
+      if (columnWarnings.length > 0) {
+        warnings.set(column.id, columnWarnings);
+      }
+    });
+
+    return warnings;
+  }, [columns, workflowTransitions]);
+
+  // Check for specific status transition issues
+  const statusTransitionInfo = useMemo(() => {
+    const info = new Map<string, { canReach: string[]; reachableFrom: string[] }>();
+
+    if (workflowTransitions.length === 0) return info;
+
+    allStatuses.forEach(status => {
+      const canReach = workflowTransitions
+        .filter(t => t.from_status_id === status.id)
+        .map(t => allStatuses.find(s => s.id === t.to_status_id)?.name || 'Unknown');
+
+      const reachableFrom = workflowTransitions
+        .filter(t => t.to_status_id === status.id)
+        .map(t => allStatuses.find(s => s.id === t.from_status_id)?.name || 'Unknown');
+
+      info.set(status.id, { canReach, reachableFrom });
+    });
+
+    return info;
+  }, [allStatuses, workflowTransitions]);
 
   // Add new column
   const handleAddColumn = async () => {
@@ -222,8 +365,43 @@ export function ColumnConfigPanel({ boardId, onColumnsChanged }: ColumnConfigPan
     );
   }
 
+  const hasWorkflowWarnings = columnAlignmentWarnings.size > 0;
+
   return (
     <div className="space-y-6">
+      {/* Workflow Alignment Warnings */}
+      {hasWorkflowWarnings && (
+        <Card className="border-orange-500/50 bg-orange-500/10">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2 text-orange-700 dark:text-orange-300">
+              <AlertCircle className="h-4 w-4" />
+              Workflow Alignment Issues
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-muted-foreground mb-3">
+              Some columns may not be reachable based on your workflow transitions. 
+              Issues dragged to these columns may be blocked by workflow rules.
+            </p>
+            <div className="space-y-2">
+              {Array.from(columnAlignmentWarnings.entries()).map(([columnId, warnings]) => {
+                const column = columns.find(c => c.id === columnId);
+                return (
+                  <div key={columnId} className="text-xs p-2 bg-background/50 rounded">
+                    <span className="font-medium">{column?.name}:</span>
+                    <ul className="ml-4 mt-1 list-disc">
+                      {warnings.map((warning, i) => (
+                        <li key={i} className="text-muted-foreground">{warning}</li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Unmapped Statuses Warning */}
       {unmappedStatuses.length > 0 && (
         <Card className="border-yellow-500/50 bg-yellow-500/10">
@@ -236,7 +414,6 @@ export function ColumnConfigPanel({ boardId, onColumnsChanged }: ColumnConfigPan
           <CardContent>
             <p className="text-xs text-muted-foreground mb-3">
               These statuses are not mapped to any column. Issues with these statuses won't appear on the board.
-              Drag them to a column or click to add.
             </p>
             <div className="flex flex-wrap gap-2">
               {unmappedStatuses.map(status => (
@@ -245,7 +422,6 @@ export function ColumnConfigPanel({ boardId, onColumnsChanged }: ColumnConfigPan
                   variant="outline"
                   className={`cursor-pointer hover:bg-accent ${getCategoryColor(status.category)}`}
                   onClick={() => {
-                    // Add to first matching category column or first column
                     const targetColumn = columns.find(c => 
                       c.statuses.some(s => s.category === status.category)
                     ) || columns[0];
@@ -282,113 +458,153 @@ export function ColumnConfigPanel({ boardId, onColumnsChanged }: ColumnConfigPan
 
       {/* Column List */}
       <div className="space-y-4">
-        {columns.map((column, index) => (
-          <Card key={column.id}>
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 flex-1">
-                  <GripVertical className="h-4 w-4 text-muted-foreground cursor-move" />
-                  {editingColumnId === column.id ? (
-                    <Input
-                      value={editingColumnName}
-                      onChange={(e) => setEditingColumnName(e.target.value)}
-                      onBlur={() => handleRenameColumn(column.id)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleRenameColumn(column.id);
-                        if (e.key === 'Escape') setEditingColumnId(null);
-                      }}
-                      className="h-7 w-48"
-                      autoFocus
-                    />
-                  ) : (
-                    <span
-                      className="font-medium cursor-pointer hover:text-primary"
-                      onClick={() => {
-                        setEditingColumnId(column.id);
-                        setEditingColumnName(column.name);
-                      }}
-                    >
-                      {column.name}
-                    </span>
-                  )}
-                  <Badge variant="secondary" className="text-xs">
-                    {column.statuses.length} status{column.statuses.length !== 1 ? 'es' : ''}
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    <Label className="text-xs text-muted-foreground">WIP:</Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      value={column.max_issues || ''}
-                      onChange={(e) => {
-                        const val = e.target.value ? parseInt(e.target.value) : null;
-                        handleUpdateWipLimit(column.id, val);
-                      }}
-                      placeholder="∞"
-                      className="h-7 w-16 text-center"
-                    />
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 text-destructive hover:text-destructive"
-                    onClick={() => setDeleteColumnId(column.id)}
-                    disabled={columns.length <= 1}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {/* Mapped Statuses */}
-              <div className="flex flex-wrap gap-2 min-h-[2rem]">
-                {column.statuses.length === 0 ? (
-                  <span className="text-xs text-muted-foreground italic">
-                    No statuses mapped. Add statuses from the unmapped list above.
-                  </span>
-                ) : (
-                  column.statuses.map(status => (
-                    <Badge
-                      key={status.id}
-                      className={`${getCategoryColor(status.category)} pr-1`}
-                    >
-                      {status.name}
-                      <button
-                        className="ml-1 hover:bg-destructive/20 rounded p-0.5"
-                        onClick={() => handleRemoveStatusFromColumn(column.id, status.id)}
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))
-                )}
-              </div>
+        {columns.map((column, index) => {
+          const warnings = columnAlignmentWarnings.get(column.id);
+          const hasWarning = warnings && warnings.length > 0;
 
-              {/* Available statuses to add */}
-              {unmappedStatuses.length > 0 && (
-                <div className="mt-3 pt-3 border-t">
-                  <Label className="text-xs text-muted-foreground mb-2 block">Add status:</Label>
-                  <div className="flex flex-wrap gap-1">
-                    {unmappedStatuses.map(status => (
-                      <Badge
-                        key={status.id}
-                        variant="outline"
-                        className="cursor-pointer hover:bg-accent text-xs"
-                        onClick={() => handleAddStatusToColumn(column.id, status.id)}
+          return (
+            <Card key={column.id} className={hasWarning ? 'border-orange-500/30' : ''}>
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 flex-1">
+                    <GripVertical className="h-4 w-4 text-muted-foreground cursor-move" />
+                    {editingColumnId === column.id ? (
+                      <Input
+                        value={editingColumnName}
+                        onChange={(e) => setEditingColumnName(e.target.value)}
+                        onBlur={() => handleRenameColumn(column.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleRenameColumn(column.id);
+                          if (e.key === 'Escape') setEditingColumnId(null);
+                        }}
+                        className="h-7 w-48"
+                        autoFocus
+                      />
+                    ) : (
+                      <span
+                        className="font-medium cursor-pointer hover:text-primary"
+                        onClick={() => {
+                          setEditingColumnId(column.id);
+                          setEditingColumnName(column.name);
+                        }}
                       >
-                        <Plus className="h-3 w-3 mr-1" />
-                        {status.name}
-                      </Badge>
-                    ))}
+                        {column.name}
+                      </span>
+                    )}
+                    <Badge variant="secondary" className="text-xs">
+                      {column.statuses.length} status{column.statuses.length !== 1 ? 'es' : ''}
+                    </Badge>
+                    {hasWarning && (
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <AlertCircle className="h-4 w-4 text-orange-500" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p className="font-medium mb-1">Workflow Issues:</p>
+                          <ul className="text-xs list-disc ml-3">
+                            {warnings?.map((w, i) => <li key={i}>{w}</li>)}
+                          </ul>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                    {!hasWarning && column.statuses.length > 0 && (
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
+                      <Label className="text-xs text-muted-foreground">WIP:</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        value={column.max_issues || ''}
+                        onChange={(e) => {
+                          const val = e.target.value ? parseInt(e.target.value) : null;
+                          handleUpdateWipLimit(column.id, val);
+                        }}
+                        placeholder="∞"
+                        className="h-7 w-16 text-center"
+                      />
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-destructive hover:text-destructive"
+                      onClick={() => setDeleteColumnId(column.id)}
+                      disabled={columns.length <= 1}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+              </CardHeader>
+              <CardContent>
+                {/* Mapped Statuses with transition info */}
+                <div className="flex flex-wrap gap-2 min-h-[2rem]">
+                  {column.statuses.length === 0 ? (
+                    <span className="text-xs text-muted-foreground italic">
+                      No statuses mapped. Add statuses from the unmapped list above.
+                    </span>
+                  ) : (
+                    column.statuses.map(status => {
+                      const transitionInfo = statusTransitionInfo.get(status.id);
+                      return (
+                        <Tooltip key={status.id}>
+                          <TooltipTrigger>
+                            <Badge className={`${getCategoryColor(status.category)} pr-1`}>
+                              {status.name}
+                              <button
+                                className="ml-1 hover:bg-destructive/20 rounded p-0.5"
+                                onClick={() => handleRemoveStatusFromColumn(column.id, status.id)}
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs text-xs">
+                            {transitionInfo && (
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-1">
+                                  <ArrowRight className="h-3 w-3" />
+                                  <span>Can transition to: {transitionInfo.canReach.length > 0 ? transitionInfo.canReach.join(', ') : 'None'}</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <ArrowRight className="h-3 w-3 rotate-180" />
+                                  <span>Reachable from: {transitionInfo.reachableFrom.length > 0 ? transitionInfo.reachableFrom.join(', ') : 'None'}</span>
+                                </div>
+                              </div>
+                            )}
+                            {!transitionInfo && <span>No workflow data</span>}
+                          </TooltipContent>
+                        </Tooltip>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* Available statuses to add */}
+                {unmappedStatuses.length > 0 && (
+                  <div className="mt-3 pt-3 border-t">
+                    <Label className="text-xs text-muted-foreground mb-2 block">Add status:</Label>
+                    <div className="flex flex-wrap gap-1">
+                      {unmappedStatuses.map(status => (
+                        <Badge
+                          key={status.id}
+                          variant="outline"
+                          className="cursor-pointer hover:bg-accent text-xs"
+                          onClick={() => handleAddStatusToColumn(column.id, status.id)}
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          {status.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {columns.length === 0 && (
