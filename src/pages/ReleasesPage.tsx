@@ -81,24 +81,40 @@ export default function ReleasesPage() {
     enabled: !!project?.id,
   });
 
-  // Get issue counts per version (mock for now as we'd need a fix_version field)
+  // Get real issue counts per version from issue_fix_versions junction table
   const { data: issueCounts } = useQuery({
-    queryKey: ['version-issues', project?.id],
+    queryKey: ['version-issues', project?.id, versions?.map(v => v.id)],
     queryFn: async () => {
-      if (!project?.id) return {};
-      // In a real implementation, you'd query issues by fix_version_id
-      // For now, return mock data using crypto.getRandomValues for secure randomness
+      if (!project?.id || !versions?.length) return {};
+      
+      const versionIds = versions.map(v => v.id);
+      
+      // Get fix versions with issue status
+      const { data: fixVersions, error } = await supabase
+        .from('issue_fix_versions')
+        .select('version_id, issues(id, status_id, issue_statuses(category))')
+        .in('version_id', versionIds);
+      
+      if (error) throw error;
+      
       const counts: Record<string, { total: number; done: number }> = {};
-      const randomArray = new Uint8Array((versions || []).length * 2);
-      crypto.getRandomValues(randomArray);
-      (versions || []).forEach((v, i) => {
-        const total = (randomArray[i * 2] % 20) + 5;
-        const done = randomArray[i * 2 + 1] % (total + 1);
-        counts[v.id] = { total, done };
+      versionIds.forEach(id => {
+        counts[id] = { total: 0, done: 0 };
       });
+      
+      fixVersions?.forEach(fv => {
+        if (fv.version_id) {
+          counts[fv.version_id].total++;
+          const issue = fv.issues as unknown as { issue_statuses: { category: string } | null };
+          if (issue?.issue_statuses?.category === 'done') {
+            counts[fv.version_id].done++;
+          }
+        }
+      });
+      
       return counts;
     },
-    enabled: !!project?.id && !!versions,
+    enabled: !!project?.id && !!versions?.length,
   });
 
   const createVersion = useMutation({

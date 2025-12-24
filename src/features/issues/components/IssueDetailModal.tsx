@@ -11,6 +11,8 @@ import {
   Loader2,
   Copy,
   GitBranch,
+  FolderKanban,
+  Tag,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,6 +44,8 @@ import { TimeTrackingSection } from './TimeTrackingSection';
 import { AttachmentsSection } from './AttachmentsSection';
 import { LinkedIssuesSection } from './LinkedIssuesSection';
 import { IssueHistorySection } from './IssueHistorySection';
+import { ComponentsSection } from './ComponentsSection';
+import { VersionsSection } from './VersionsSection';
 import { CustomFieldsForm } from '@/features/custom-fields/components/CustomFieldsForm';
 import { MentionTextarea, renderMentions } from '@/features/comments';
 import { Jobs, submitJob } from '@/lib/backgroundJobs';
@@ -492,6 +496,39 @@ export function IssueDetailModal({ issueId, open, onOpenChange }: IssueDetailMod
                       )}
                     </div>
                   </div>
+                </div>
+
+                <Separator />
+
+                {/* Components */}
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-2 block flex items-center gap-1">
+                    <FolderKanban className="h-3 w-3" />
+                    Component/s
+                  </Label>
+                  <ComponentsSection issueId={issueId} projectId={issue.project_id} />
+                </div>
+
+                <Separator />
+
+                {/* Fix Version/s */}
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-2 block flex items-center gap-1">
+                    <Tag className="h-3 w-3" />
+                    Fix Version/s
+                  </Label>
+                  <VersionsSection issueId={issueId} projectId={issue.project_id} type="fix" />
+                </div>
+
+                <Separator />
+
+                {/* Affects Version/s */}
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-2 block flex items-center gap-1">
+                    <Tag className="h-3 w-3" />
+                    Affects Version/s
+                  </Label>
+                  <VersionsSection issueId={issueId} projectId={issue.project_id} type="affects" />
                 </div>
 
                 <Separator />
