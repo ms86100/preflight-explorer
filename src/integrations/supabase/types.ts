@@ -391,24 +391,36 @@ export type Database = {
       components: {
         Row: {
           created_at: string | null
+          default_assignee_type:
+            | Database["public"]["Enums"]["default_assignee_type"]
+            | null
           description: string | null
           id: string
+          is_archived: boolean | null
           lead_id: string | null
           name: string
           project_id: string
         }
         Insert: {
           created_at?: string | null
+          default_assignee_type?:
+            | Database["public"]["Enums"]["default_assignee_type"]
+            | null
           description?: string | null
           id?: string
+          is_archived?: boolean | null
           lead_id?: string | null
           name: string
           project_id: string
         }
         Update: {
           created_at?: string | null
+          default_assignee_type?:
+            | Database["public"]["Enums"]["default_assignee_type"]
+            | null
           description?: string | null
           id?: string
+          is_archived?: boolean | null
           lead_id?: string | null
           name?: string
           project_id?: string
@@ -1718,6 +1730,114 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      issue_affects_versions: {
+        Row: {
+          created_at: string
+          id: string
+          issue_id: string
+          version_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          issue_id: string
+          version_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          issue_id?: string
+          version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "issue_affects_versions_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "issues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issue_affects_versions_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      issue_components: {
+        Row: {
+          component_id: string
+          created_at: string
+          id: string
+          issue_id: string
+        }
+        Insert: {
+          component_id: string
+          created_at?: string
+          id?: string
+          issue_id: string
+        }
+        Update: {
+          component_id?: string
+          created_at?: string
+          id?: string
+          issue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "issue_components_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issue_components_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "issues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      issue_fix_versions: {
+        Row: {
+          created_at: string
+          id: string
+          issue_id: string
+          version_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          issue_id: string
+          version_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          issue_id?: string
+          version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "issue_fix_versions_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "issues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issue_fix_versions_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "versions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       issue_history: {
         Row: {
@@ -3656,6 +3776,11 @@ export type Database = {
         | "restricted"
         | "confidential"
         | "export_controlled"
+      default_assignee_type:
+        | "component_lead"
+        | "project_lead"
+        | "project_default"
+        | "unassigned"
       issue_type_category: "standard" | "subtask" | "epic"
       project_template:
         | "scrum"
@@ -3801,6 +3926,12 @@ export const Constants = {
         "restricted",
         "confidential",
         "export_controlled",
+      ],
+      default_assignee_type: [
+        "component_lead",
+        "project_lead",
+        "project_default",
+        "unassigned",
       ],
       issue_type_category: ["standard", "subtask", "epic"],
       project_template: [
