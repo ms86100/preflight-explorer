@@ -440,10 +440,11 @@ export default function BoardPage() {
         onOpenChange={setDetailModalOpen}
       />
 
-      {board && (
+      {board && project && (
         <BoardSettingsModal
           boardId={board.id}
           boardName={board.name}
+          projectId={project.id}
           open={boardSettingsOpen}
           onOpenChange={setBoardSettingsOpen}
           onColumnsChanged={refetchColumns}

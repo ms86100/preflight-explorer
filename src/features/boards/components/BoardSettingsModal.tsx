@@ -12,6 +12,7 @@ import { Settings, Columns3 } from 'lucide-react';
 interface BoardSettingsModalProps {
   boardId: string;
   boardName: string;
+  projectId?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onColumnsChanged: () => void;
@@ -20,6 +21,7 @@ interface BoardSettingsModalProps {
 export function BoardSettingsModal({
   boardId,
   boardName,
+  projectId,
   open,
   onOpenChange,
   onColumnsChanged,
@@ -54,6 +56,7 @@ export function BoardSettingsModal({
           <TabsContent value="columns" className="flex-1 overflow-auto mt-4">
             <ColumnConfigPanel
               boardId={boardId}
+              projectId={projectId}
               onColumnsChanged={onColumnsChanged}
             />
           </TabsContent>
