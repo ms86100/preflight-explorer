@@ -80,7 +80,7 @@ import {
   useMoveIssuesToBacklog 
 } from '@/features/boards';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { SprintPlanningModal } from './SprintPlanningModal';
+
 import { SprintCompletionModal } from './SprintCompletionModal';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -140,13 +140,7 @@ export function DraggableBacklogView() {
   const [selectedIssues, setSelectedIssues] = useState<Set<string>>(new Set());
   const [expandedSprints, setExpandedSprints] = useState<Set<string>>(new Set(['backlog']));
   const [isCreateIssueOpen, setIsCreateIssueOpen] = useState(false);
-  const [isSprintPlanningOpen, setIsSprintPlanningOpen] = useState(false);
   const [createIssueContext, setCreateIssueContext] = useState<string | undefined>();
-  const [planningSprintId, setPlanningSprintId] = useState<string>('');
-  const [planningSprintName, setPlanningSprintName] = useState<string>('');
-  const [planningSprintStartDate, setPlanningSprintStartDate] = useState<string | null>(null);
-  const [planningSprintEndDate, setPlanningSprintEndDate] = useState<string | null>(null);
-  const [planningSprintGoal, setPlanningSprintGoal] = useState<string | null>(null);
 
   // Create sprint with dates modal state
   const [isCreateSprintOpen, setIsCreateSprintOpen] = useState(false);
@@ -245,7 +239,7 @@ export function DraggableBacklogView() {
   });
 
   const createSprint = useCreateSprint();
-  useStartSprint();
+  const startSprint = useStartSprint();
   const completeSprint = useCompleteSprint();
   const deleteIssue = useDeleteIssue();
   const updateIssue = useUpdateIssue();
@@ -395,13 +389,20 @@ export function DraggableBacklogView() {
     }
   };
 
-  const handleStartSprintWithPlanning = (sprint: SprintSection) => {
-    setPlanningSprintId(sprint.id);
-    setPlanningSprintName(sprint.name);
-    setPlanningSprintStartDate(sprint.start_date);
-    setPlanningSprintEndDate(sprint.end_date);
-    setPlanningSprintGoal(sprint.goal);
-    setIsSprintPlanningOpen(true);
+  const handleStartSprint = async (sprint: SprintSection) => {
+    try {
+      const startDate = sprint.start_date || new Date().toISOString();
+      const endDate = sprint.end_date || addDays(new Date(), 14).toISOString();
+      
+      await startSprint.mutateAsync({
+        id: sprint.id,
+        startDate,
+        endDate,
+      });
+      toast.success(`${sprint.name} started successfully`);
+    } catch {
+      toast.error('Failed to start sprint');
+    }
   };
 
   const handleCompleteSprint = async (sprintId: string) => {
@@ -683,7 +684,7 @@ export function DraggableBacklogView() {
 
             <div className="flex items-center gap-2">
               {sprint.state === 'future' && (
-                <Button size="sm" onClick={() => handleStartSprintWithPlanning(sprint)}>
+                <Button size="sm" onClick={() => handleStartSprint(sprint)} disabled={startSprint.isPending}>
                   <Play className="h-3 w-3 mr-1" />
                   Start Sprint
                 </Button>
@@ -767,15 +768,6 @@ export function DraggableBacklogView() {
         onOpenChange={setIsCreateIssueOpen}
       />
 
-      <SprintPlanningModal
-        sprintId={planningSprintId}
-        sprintName={planningSprintName}
-        open={isSprintPlanningOpen}
-        onOpenChange={setIsSprintPlanningOpen}
-        initialStartDate={planningSprintStartDate}
-        initialEndDate={planningSprintEndDate}
-        initialGoal={planningSprintGoal}
-      />
 
       <AppLayout showSidebar projectKey={projectKey}>
         <div className="flex flex-col h-full">
