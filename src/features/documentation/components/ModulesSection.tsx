@@ -191,6 +191,107 @@ export const ModulesSection: React.FC = () => {
                   </Card>
                 )}
 
+                {/* API Documentation */}
+                {module.apiDocumentation && module.apiDocumentation.length > 0 && (
+                  <Card className="border-blue-500/20">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Code className="w-4 h-4" />
+                        API Documentation
+                      </CardTitle>
+                      <CardDescription>
+                        REST API endpoints for this module
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-20">Method</TableHead>
+                            <TableHead>Endpoint</TableHead>
+                            <TableHead className="hidden md:table-cell">Description</TableHead>
+                            <TableHead className="w-20">Auth</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {module.apiDocumentation.map((api, i) => (
+                            <TableRow key={i}>
+                              <TableCell>
+                                <Badge 
+                                  variant="outline" 
+                                  className={
+                                    api.method === 'GET' ? 'bg-green-500/10 text-green-700 border-green-500/30' :
+                                    api.method === 'POST' ? 'bg-blue-500/10 text-blue-700 border-blue-500/30' :
+                                    api.method === 'PUT' ? 'bg-yellow-500/10 text-yellow-700 border-yellow-500/30' :
+                                    api.method === 'PATCH' ? 'bg-orange-500/10 text-orange-700 border-orange-500/30' :
+                                    'bg-red-500/10 text-red-700 border-red-500/30'
+                                  }
+                                >
+                                  {api.method}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="font-mono text-xs">{api.path}</TableCell>
+                              <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{api.description}</TableCell>
+                              <TableCell>
+                                <Badge variant={api.authentication === 'required' ? 'default' : 'secondary'} className="text-xs">
+                                  {api.authentication === 'required' ? '🔐' : '🔓'}
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Implementation Details */}
+                {module.implementationDetails && module.implementationDetails.length > 0 && (
+                  <Card className="border-green-500/20">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Settings className="w-4 h-4" />
+                        Implementation Details
+                      </CardTitle>
+                      <CardDescription>
+                        Technical implementation status and details
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Area</TableHead>
+                            <TableHead>Description</TableHead>
+                            <TableHead className="w-28">Status</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {module.implementationDetails.map((detail, i) => (
+                            <TableRow key={i}>
+                              <TableCell className="font-medium">{detail.area}</TableCell>
+                              <TableCell className="text-sm text-muted-foreground">{detail.description}</TableCell>
+                              <TableCell>
+                                <Badge 
+                                  variant="outline"
+                                  className={
+                                    detail.status === 'implemented' ? 'bg-green-500/10 text-green-700 border-green-500/30' :
+                                    detail.status === 'partial' ? 'bg-yellow-500/10 text-yellow-700 border-yellow-500/30' :
+                                    'bg-slate-500/10 text-slate-600 border-slate-500/30'
+                                  }
+                                >
+                                  {detail.status === 'implemented' ? '✓ Implemented' : 
+                                   detail.status === 'partial' ? '◐ Partial' : '○ Planned'}
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* Purpose */}
                 <Card>
                   <CardHeader className="pb-2">
