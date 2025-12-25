@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Eye, EyeOff, Lock } from 'lucide-react';
+import { Eye, EyeOff, Lock, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -309,6 +309,17 @@ export default function AuthPage() {
               </Tabs>
             </CardContent>
           </Card>
+
+          {/* Documentation Link */}
+          <div className="mt-6 text-center">
+            <Link 
+              to="/docs" 
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              <BookOpen className="h-4 w-4" />
+              View Documentation
+            </Link>
+          </div>
 
         </div>
       </div>
