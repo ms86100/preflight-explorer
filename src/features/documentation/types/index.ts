@@ -1,3 +1,18 @@
+export interface ApiEndpoint {
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  path: string;
+  description: string;
+  requestBody?: string;
+  responseBody?: string;
+  authentication: 'required' | 'optional' | 'none';
+}
+
+export interface ImplementationDetail {
+  area: string;
+  description: string;
+  status: 'implemented' | 'partial' | 'planned';
+}
+
 export interface ModuleDoc {
   id: string;
   name: string;
@@ -14,7 +29,9 @@ export interface ModuleDoc {
   preconditions: string[];
   postconditions: string[];
   edgeCases: string[];
-  associatedDiagrams?: string[]; // Array of diagram IDs linked to this module
+  associatedDiagrams?: string[];
+  apiDocumentation?: ApiEndpoint[];
+  implementationDetails?: ImplementationDetail[];
 }
 
 export interface DiagramData {
