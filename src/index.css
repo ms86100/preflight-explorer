@@ -477,3 +477,83 @@
 .animate-fade-in {
   animation: fadeIn 0.2s ease-out;
 }
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+  /* Hide non-essential elements */
+  .print\\:hidden,
+  nav,
+  header,
+  aside,
+  .sticky,
+  button:not(.print-visible),
+  [data-radix-scroll-area-viewport] > div > div:empty {
+    display: none !important;
+  }
+  
+  /* Reset scroll areas for print */
+  [data-radix-scroll-area-viewport] {
+    overflow: visible !important;
+    height: auto !important;
+  }
+  
+  /* Make content full width */
+  main {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  /* Ensure diagrams are fully visible */
+  .overflow-auto,
+  .overflow-hidden,
+  .overflow-scroll {
+    overflow: visible !important;
+  }
+  
+  /* Remove max-height constraints */
+  [class*="max-h-"] {
+    max-height: none !important;
+  }
+  
+  /* Page break controls */
+  .page-break-before {
+    page-break-before: always;
+  }
+  
+  .page-break-after {
+    page-break-after: always;
+  }
+  
+  .avoid-page-break {
+    page-break-inside: avoid;
+  }
+  
+  /* Card printing */
+  .card, [class*="Card"] {
+    page-break-inside: avoid;
+    box-shadow: none !important;
+    border: 1px solid #e5e5e5 !important;
+  }
+  
+  /* Ensure diagrams SVGs print well */
+  svg {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+  
+  /* Reset backgrounds for printing */
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  
+  /* Ensure text is readable */
+  * {
+    color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

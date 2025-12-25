@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useId } from 'react';
+import React, { useState, useEffect, useId, useRef } from 'react';
 import mermaid from 'mermaid';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Search, Folder, Code, Settings, Users, GitBranch, Image, AlertCircle } from 'lucide-react';
+import { Search, Folder, Code, Settings, Users, GitBranch, Image, AlertCircle, Printer } from 'lucide-react';
 import { moduleDocumentation } from '../data/moduleDocumentation';
 import { diagramsData } from '../data/diagramsData';
 
@@ -81,7 +81,7 @@ const InlineMermaidDiagram: React.FC<InlineMermaidDiagramProps> = ({ code, diagr
 
   return (
     <div 
-      className="bg-white dark:bg-slate-900 rounded-lg p-3 overflow-auto max-h-[300px]"
+      className="bg-white dark:bg-slate-900 rounded-lg p-3 overflow-visible print:overflow-visible"
       dangerouslySetInnerHTML={{ __html: svg }}
     />
   );
@@ -89,6 +89,8 @@ const InlineMermaidDiagram: React.FC<InlineMermaidDiagramProps> = ({ code, diagr
 
 export const ModulesSection: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedModules, setExpandedModules] = useState<string[]>([]);
+  const moduleRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   
   const filteredModules = moduleDocumentation.filter(
     module =>
@@ -98,6 +100,91 @@ export const ModulesSection: React.FC = () => {
 
   const getModuleDiagrams = (diagramIds: string[] = []) => {
     return diagramsData.filter(d => diagramIds.includes(d.id));
+  };
+
+  const handlePrintModule = (moduleId: string) => {
+    // Temporarily expand this module if not already
+    const wasExpanded = expandedModules.includes(moduleId);
+    if (!wasExpanded) {
+      setExpandedModules([moduleId]);
+    }
+    
+    // Wait for render then print
+    setTimeout(() => {
+      const moduleEl = moduleRefs.current[moduleId];
+      if (moduleEl) {
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+          const module = moduleDocumentation.find(m => m.id === moduleId);
+          printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>${module?.name || 'Module'} Documentation</title>
+              <style>
+                * { box-sizing: border-box; margin: 0; padding: 0; }
+                body { 
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                  padding: 20px;
+                  line-height: 1.6;
+                  color: #1a1a1a;
+                }
+                h1 { font-size: 24px; margin-bottom: 8px; }
+                h2 { font-size: 18px; margin: 16px 0 8px; border-bottom: 1px solid #e5e5e5; padding-bottom: 4px; }
+                h3 { font-size: 16px; margin: 12px 0 6px; }
+                h4 { font-size: 14px; margin: 8px 0 4px; font-weight: 600; }
+                p { margin: 4px 0; font-size: 14px; color: #666; }
+                .section { margin: 16px 0; padding: 12px; border: 1px solid #e5e5e5; border-radius: 8px; }
+                .diagram-container { 
+                  background: #f9fafb; 
+                  padding: 16px; 
+                  border-radius: 8px; 
+                  margin: 8px 0;
+                  page-break-inside: avoid;
+                }
+                .diagram-container svg { max-width: 100%; height: auto; }
+                table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 8px 0; }
+                th, td { border: 1px solid #e5e5e5; padding: 8px; text-align: left; }
+                th { background: #f5f5f5; font-weight: 600; }
+                ul, ol { padding-left: 20px; font-size: 14px; }
+                li { margin: 4px 0; }
+                .badge { 
+                  display: inline-block; 
+                  padding: 2px 8px; 
+                  border-radius: 4px; 
+                  font-size: 11px;
+                  background: #f0f0f0;
+                  margin: 2px;
+                }
+                .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+                .mono { font-family: monospace; font-size: 12px; }
+                @media print {
+                  body { padding: 0; }
+                  .section { page-break-inside: avoid; }
+                }
+              </style>
+            </head>
+            <body>
+              <h1>${module?.name}</h1>
+              <p>${module?.description}</p>
+              ${moduleEl.innerHTML}
+            </body>
+            </html>
+          `);
+          printWindow.document.close();
+          printWindow.focus();
+          setTimeout(() => {
+            printWindow.print();
+            printWindow.close();
+          }, 500);
+        }
+      }
+      
+      // Restore previous state
+      if (!wasExpanded) {
+        setExpandedModules([]);
+      }
+    }, 100);
   };
 
   return (
@@ -127,7 +214,12 @@ export const ModulesSection: React.FC = () => {
       </div>
 
       {/* Module List */}
-      <Accordion type="single" collapsible className="space-y-4">
+      <Accordion 
+        type="multiple" 
+        value={expandedModules}
+        onValueChange={setExpandedModules}
+        className="space-y-4"
+      >
         {filteredModules.map((module) => {
           const moduleDiagrams = getModuleDiagrams(module.associatedDiagrams);
           
@@ -138,23 +230,36 @@ export const ModulesSection: React.FC = () => {
               className="border rounded-lg px-4"
             >
               <AccordionTrigger className="hover:no-underline">
-                <div className="flex items-center gap-3 text-left">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <div className="flex items-center gap-3 text-left flex-1">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <Folder className="w-5 h-5 text-primary" />
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <h3 className="font-semibold">{module.name}</h3>
-                    <p className="text-sm text-muted-foreground">{module.description}</p>
+                    <p className="text-sm text-muted-foreground truncate">{module.description}</p>
                   </div>
                   {moduleDiagrams.length > 0 && (
-                    <Badge variant="outline" className="ml-auto mr-2 gap-1">
+                    <Badge variant="outline" className="ml-auto mr-2 gap-1 flex-shrink-0">
                       <GitBranch className="h-3 w-3" />
                       {moduleDiagrams.length} diagram{moduleDiagrams.length > 1 ? 's' : ''}
                     </Badge>
                   )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1 flex-shrink-0 print:hidden"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePrintModule(module.id);
+                    }}
+                  >
+                    <Printer className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Print</span>
+                  </Button>
                 </div>
               </AccordionTrigger>
               <AccordionContent className="pt-4 space-y-6">
+                <div ref={(el) => { moduleRefs.current[module.id] = el; }}>
                 {/* Visual Diagrams - Now at the top! */}
                 {moduleDiagrams.length > 0 && (
                   <Card className="border-primary/20">
@@ -469,6 +574,7 @@ export const ModulesSection: React.FC = () => {
                     </div>
                   </CardContent>
                 </Card>
+                </div>
               </AccordionContent>
             </AccordionItem>
           );
