@@ -157,13 +157,7 @@ export function CreateIssueModal({
     <Dialog open={open} onOpenChange={(next) => !next && handleClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0">
         <DialogHeader className="px-6 py-4 border-b border-border sticky top-0 bg-card z-10">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-lg font-medium">Create Issue</DialogTitle>
-            <Button variant="ghost" size="sm" className="gap-1.5 text-sm text-muted-foreground">
-              <Settings className="h-4 w-4" />
-              Configure Fields
-            </Button>
-          </div>
+          <DialogTitle className="text-lg font-medium">Create Issue</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onFormSubmit)} className="px-6 py-4">

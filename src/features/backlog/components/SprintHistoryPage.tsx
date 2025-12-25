@@ -57,51 +57,51 @@ export function SprintHistoryPage({ boardId, projectKey }: SprintHistoryPageProp
 
       {/* Aggregate Stats */}
       {sprints && sprints.length > 0 && (
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Total Sprints
+            <CardHeader className="pb-2 px-3 pt-3 md:px-6 md:pt-6">
+              <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground flex items-center gap-1.5 md:gap-2">
+                <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4 shrink-0" />
+                <span className="truncate">Total Sprints</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{aggregateStats?.totalSprints}</div>
+            <CardContent className="px-3 pb-3 md:px-6 md:pb-6">
+              <div className="text-2xl md:text-3xl font-bold">{aggregateStats?.totalSprints}</div>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Target className="h-4 w-4" />
-                Avg Completion
+            <CardHeader className="pb-2 px-3 pt-3 md:px-6 md:pt-6">
+              <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground flex items-center gap-1.5 md:gap-2">
+                <Target className="h-3.5 w-3.5 md:h-4 md:w-4 shrink-0" />
+                <span className="truncate">Avg Completion</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-green-600">{avgCompletionRate}%</div>
+            <CardContent className="px-3 pb-3 md:px-6 md:pb-6">
+              <div className="text-2xl md:text-3xl font-bold text-green-600">{avgCompletionRate}%</div>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <TrendingUp className="h-4 w-4" />
-                Avg Velocity
+            <CardHeader className="pb-2 px-3 pt-3 md:px-6 md:pt-6">
+              <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground flex items-center gap-1.5 md:gap-2">
+                <TrendingUp className="h-3.5 w-3.5 md:h-4 md:w-4 shrink-0" />
+                <span className="truncate">Avg Velocity</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-blue-600">{avgVelocity}</div>
-              <div className="text-xs text-muted-foreground">points/sprint</div>
+            <CardContent className="px-3 pb-3 md:px-6 md:pb-6">
+              <div className="text-2xl md:text-3xl font-bold text-blue-600">{avgVelocity}</div>
+              <div className="text-[10px] md:text-xs text-muted-foreground truncate">points/sprint</div>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Archive className="h-4 w-4" />
-                Total Delivered
+            <CardHeader className="pb-2 px-3 pt-3 md:px-6 md:pt-6">
+              <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground flex items-center gap-1.5 md:gap-2">
+                <Archive className="h-3.5 w-3.5 md:h-4 md:w-4 shrink-0" />
+                <span className="truncate">Total Delivered</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-purple-600">{aggregateStats?.completedIssues}</div>
-              <div className="text-xs text-muted-foreground">issues completed</div>
+            <CardContent className="px-3 pb-3 md:px-6 md:pb-6">
+              <div className="text-2xl md:text-3xl font-bold text-purple-600">{aggregateStats?.completedIssues}</div>
+              <div className="text-[10px] md:text-xs text-muted-foreground truncate">issues completed</div>
             </CardContent>
           </Card>
         </div>

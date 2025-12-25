@@ -245,7 +245,7 @@ export function BoardColumn({
   return (
     <section
       aria-label={`Board column: ${name}`}
-      className={`flex flex-col min-w-[280px] max-w-[320px] bg-muted/30 rounded-lg transition-all ${
+      className={`flex flex-col min-w-[260px] sm:min-w-[280px] max-w-[280px] sm:max-w-[320px] bg-muted/30 rounded-lg transition-all ${
         isDragOver && !hasMultipleStatuses ? 'ring-2 ring-primary ring-offset-2' : ''
       } ${dropError ? 'ring-2 ring-destructive ring-offset-2' : ''}`}
       onDragOver={!hasMultipleStatuses ? (e) => handleDragOver(e) : undefined}
@@ -253,15 +253,15 @@ export function BoardColumn({
       onDrop={!hasMultipleStatuses ? (e) => handleDrop(e) : undefined}
     >
       {/* Column Header */}
-      <div className={`px-3 py-2 rounded-t-lg border-b ${STATUS_CATEGORY_STYLES[statusCategory]} ${hasNoStatusMappings ? 'border-warning/50' : ''}`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${hasNoStatusMappings ? 'bg-warning' : STATUS_CATEGORY_DOT[statusCategory]}`} />
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">
+      <div className={`px-2 sm:px-3 py-2 rounded-t-lg border-b ${STATUS_CATEGORY_STYLES[statusCategory]} ${hasNoStatusMappings ? 'border-warning/50' : ''}`}>
+        <div className="flex items-center justify-between gap-1">
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
+            <span className={`w-2 h-2 rounded-full shrink-0 ${hasNoStatusMappings ? 'bg-warning' : STATUS_CATEGORY_DOT[statusCategory]}`} />
+            <h3 className="text-xs sm:text-sm font-semibold uppercase tracking-wide text-foreground truncate">
               {name}
             </h3>
             <span
-              className={`text-xs font-medium px-1.5 py-0.5 rounded ${getIssueLimitBadgeClass(isOverLimit, isUnderLimit)}`}
+              className={`text-xs font-medium px-1 sm:px-1.5 py-0.5 rounded shrink-0 ${getIssueLimitBadgeClass(isOverLimit, isUnderLimit)}`}
             >
               {issueCount}
               {maxIssues !== undefined && ` / ${maxIssues}`}
@@ -269,9 +269,9 @@ export function BoardColumn({
             {hasNoStatusMappings && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Badge variant="outline" className="text-xs py-0 h-5 border-warning text-warning gap-1">
-                    <Settings className="h-3 w-3" />
-                    No status
+                  <Badge variant="outline" className="text-[10px] sm:text-xs py-0 h-4 sm:h-5 border-warning text-warning gap-0.5 sm:gap-1 shrink-0">
+                    <Settings className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                    <span className="hidden sm:inline">No status</span>
                   </Badge>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -286,13 +286,13 @@ export function BoardColumn({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-5 w-5"
+                    className="h-4 w-4 sm:h-5 sm:w-5 shrink-0"
                     onClick={() => setShowSubStatuses(!showSubStatuses)}
                   >
                     {showSubStatuses ? (
-                      <ChevronDown className="h-3 w-3" />
+                      <ChevronDown className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                     ) : (
-                      <ChevronRight className="h-3 w-3" />
+                      <ChevronRight className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                     )}
                   </Button>
                 </TooltipTrigger>
@@ -305,8 +305,8 @@ export function BoardColumn({
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-6 w-6" aria-label={`${name} column options`}>
-                <MoreHorizontal className="h-4 w-4" />
+              <Button variant="ghost" size="icon" className="h-5 w-5 sm:h-6 sm:w-6 shrink-0" aria-label={`${name} column options`}>
+                <MoreHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -322,7 +322,7 @@ export function BoardColumn({
         {hasMultipleStatuses && (
           <div className="mt-1 flex flex-wrap gap-1">
             {statuses.map(status => (
-              <Badge key={status.id} variant="outline" className="text-xs py-0 h-5">
+              <Badge key={status.id} variant="outline" className="text-[10px] sm:text-xs py-0 h-4 sm:h-5 truncate max-w-[80px]">
                 {status.name}
               </Badge>
             ))}

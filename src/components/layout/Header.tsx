@@ -286,19 +286,19 @@ export function Header({ onMobileSidebarToggle, showMobileSidebarToggle }: Heade
 
       {/* Mobile Menu - Full screen slide down */}
       {mobileMenuOpen && (
-        <div className="fixed inset-x-0 top-14 bottom-0 bg-header/98 backdrop-blur-lg lg:hidden animate-fade-in z-40 overflow-y-auto">
+        <div className="fixed inset-x-0 top-14 bottom-0 bg-header backdrop-blur-lg lg:hidden animate-fade-in z-40 overflow-y-auto">
           <nav className="p-4 space-y-1 pb-24">
             {NAV_ITEMS.map((item) => (
               <Link
                 key={item.href}
                 to={item.href}
-                className="flex items-center gap-4 px-4 py-4 text-white/90 hover:bg-white/10 active:bg-white/20 rounded-xl transition-colors active:scale-[0.98]"
+                className="flex items-center gap-4 px-4 py-4 text-white hover:bg-white/10 active:bg-white/20 rounded-xl transition-colors active:scale-[0.98]"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-                  <item.icon className="h-5 w-5" />
+                  <item.icon className="h-5 w-5 text-white" />
                 </div>
-                <span className="text-base font-medium">{item.label}</span>
+                <span className="text-base font-medium text-white">{item.label}</span>
               </Link>
             ))}
             
@@ -306,17 +306,17 @@ export function Header({ onMobileSidebarToggle, showMobileSidebarToggle }: Heade
             {hasRole('admin') && (
               <>
                 <div className="border-t border-white/10 my-4 pt-4">
-                  <p className="px-4 text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Administration</p>
+                  <p className="px-4 text-xs font-semibold text-white/60 uppercase tracking-wider mb-2">Administration</p>
                 </div>
                 {ADMIN_ITEMS.slice(0, 4).map((item) => (
                   <Link
                     key={item.href}
                     to={item.href}
-                    className="flex items-center gap-4 px-4 py-3 text-white/80 hover:bg-white/10 active:bg-white/20 rounded-xl transition-colors active:scale-[0.98]"
+                    className="flex items-center gap-4 px-4 py-3 text-white hover:bg-white/10 active:bg-white/20 rounded-xl transition-colors active:scale-[0.98]"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    <item.icon className="h-5 w-5 opacity-70" />
-                    <span className="text-sm">{item.label}</span>
+                    <item.icon className="h-5 w-5 text-white" />
+                    <span className="text-sm text-white">{item.label}</span>
                   </Link>
                 ))}
               </>
