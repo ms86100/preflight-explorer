@@ -96,48 +96,48 @@ export function SprintHeader({
   return (
     <div className="bg-card border border-border rounded-lg">
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
-        <div className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+        <div className="p-3 md:p-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-2 md:gap-3 min-w-0">
               <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-6 w-6">
+                <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
                   <ChevronDown
                     className={`h-4 w-4 transition-transform ${isExpanded ? '' : '-rotate-90'}`}
                   />
                 </Button>
               </CollapsibleTrigger>
 
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-semibold">{sprint.name}</h2>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-base md:text-lg font-semibold truncate">{sprint.name}</h2>
                   <span
-                    className={`lozenge ${getSprintStateLozengeClass(sprint.state)}`}
+                    className={`lozenge ${getSprintStateLozengeClass(sprint.state)} shrink-0`}
                   >
                     {sprint.state}
                   </span>
                 </div>
                 {sprint.goal && (
-                  <p className="text-sm text-muted-foreground mt-0.5">{sprint.goal}</p>
+                  <p className="text-sm text-muted-foreground mt-0.5 truncate">{sprint.goal}</p>
                 )}
               </div>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 md:gap-4 flex-wrap">
               {/* Sprint Dates */}
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1.5">
-                  <Calendar className="h-4 w-4" />
-                  <span>
+              <div className="flex items-center gap-2 md:gap-4 text-xs md:text-sm text-muted-foreground">
+                <div className="flex items-center gap-1 md:gap-1.5">
+                  <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4 shrink-0" />
+                  <span className="whitespace-nowrap">
                     {formatDate(sprint.start_date)} - {formatDate(sprint.end_date)}
                   </span>
                 </div>
 
                 {sprint.state === 'active' && daysRemaining !== null && (
                   <div
-                    className={`flex items-center gap-1.5 ${getDaysRemainingClassName(daysRemaining)}`}
+                    className={`flex items-center gap-1 md:gap-1.5 ${getDaysRemainingClassName(daysRemaining)}`}
                   >
-                    <Clock className="h-4 w-4" />
-                    <span>{getDaysRemainingText(daysRemaining)}</span>
+                    <Clock className="h-3.5 w-3.5 md:h-4 md:w-4 shrink-0" />
+                    <span className="whitespace-nowrap">{getDaysRemainingText(daysRemaining)}</span>
                   </div>
                 )}
               </div>
@@ -145,16 +145,18 @@ export function SprintHeader({
               {/* Sprint Actions */}
               <div className="flex items-center gap-2">
                 {sprint.state === 'future' && (
-                  <Button size="sm" onClick={onStartSprint}>
-                    <Play className="h-4 w-4 mr-1" />
-                    Start Sprint
+                  <Button size="sm" onClick={onStartSprint} className="text-xs md:text-sm">
+                    <Play className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1" />
+                    <span className="hidden sm:inline">Start Sprint</span>
+                    <span className="sm:hidden">Start</span>
                   </Button>
                 )}
 
                 {sprint.state === 'active' && (
-                  <Button size="sm" variant="outline" onClick={onCompleteSprint}>
-                    <CheckCircle2 className="h-4 w-4 mr-1" />
-                    Complete Sprint
+                  <Button size="sm" variant="outline" onClick={onCompleteSprint} className="text-xs md:text-sm">
+                    <CheckCircle2 className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1" />
+                    <span className="hidden sm:inline">Complete Sprint</span>
+                    <span className="sm:hidden">Complete</span>
                   </Button>
                 )}
 
@@ -174,11 +176,11 @@ export function SprintHeader({
         </div>
 
         <CollapsibleContent>
-          <div className="px-4 pb-4 border-t border-border pt-3">
-            <div className="grid grid-cols-2 gap-6">
+          <div className="px-3 md:px-4 pb-3 md:pb-4 border-t border-border pt-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               {/* Issues Progress */}
               <div>
-                <div className="flex items-center justify-between text-sm mb-2">
+                <div className="flex items-center justify-between text-xs md:text-sm mb-2">
                   <span className="text-muted-foreground">Issues</span>
                   <span className="font-medium">
                     {stats.completedIssues} / {stats.totalIssues} ({progressPercent}%)
@@ -189,7 +191,7 @@ export function SprintHeader({
 
               {/* Points Progress */}
               <div>
-                <div className="flex items-center justify-between text-sm mb-2">
+                <div className="flex items-center justify-between text-xs md:text-sm mb-2">
                   <span className="text-muted-foreground">Story Points</span>
                   <span className="font-medium">
                     {stats.completedPoints} / {stats.totalPoints} ({pointsPercent}%)

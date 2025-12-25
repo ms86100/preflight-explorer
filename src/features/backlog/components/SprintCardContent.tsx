@@ -50,36 +50,40 @@ interface SprintCardContentProps {
 export function SprintCardContent({ sprint, variant = 'full' }: SprintCardContentProps) {
   return (
     <AccordionItem value={sprint.id} className="border rounded-lg mb-4 overflow-hidden bg-card">
-      <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/50">
-        <div className="flex items-center justify-between w-full pr-4">
-          <div className="flex items-center gap-4">
-            <div className="p-2 rounded-full bg-green-500/10">
-              <CheckCircle2 className="h-5 w-5 text-green-500" />
+      <AccordionTrigger className="px-3 sm:px-6 py-3 sm:py-4 hover:no-underline hover:bg-muted/50">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-2 sm:gap-4 pr-2 sm:pr-4">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+            <div className="p-1.5 sm:p-2 rounded-full bg-green-500/10 shrink-0">
+              <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
             </div>
-            <div className="text-left">
-              <div className="font-semibold text-base">{sprint.name}</div>
-              <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
-                <Calendar className="h-3.5 w-3.5" />
-                {sprint.start_date && format(new Date(sprint.start_date), 'MMM d')}
-                <ArrowRight className="h-3 w-3" />
-                {sprint.completed_date && format(new Date(sprint.completed_date), 'MMM d, yyyy')}
-                <span className="mx-1">•</span>
-                <span>{sprint.stats.durationDays} days</span>
+            <div className="text-left min-w-0 flex-1">
+              <div className="font-semibold text-sm sm:text-base truncate">{sprint.name}</div>
+              <div className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1 sm:gap-2 mt-0.5 sm:mt-1 flex-wrap">
+                <Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
+                <span className="whitespace-nowrap">
+                  {sprint.start_date && format(new Date(sprint.start_date), 'MMM d')}
+                </span>
+                <ArrowRight className="h-2.5 w-2.5 sm:h-3 sm:w-3 shrink-0" />
+                <span className="whitespace-nowrap">
+                  {sprint.completed_date && format(new Date(sprint.completed_date), 'MMM d, yyyy')}
+                </span>
+                <span className="mx-0.5 sm:mx-1 hidden sm:inline">•</span>
+                <span className="hidden sm:inline">{sprint.stats.durationDays} days</span>
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 sm:gap-6 justify-end sm:justify-start">
             <div className="text-right">
-              <div className="text-2xl font-bold text-green-500">{sprint.stats.completionRate}%</div>
-              <div className="text-xs text-muted-foreground">Completion</div>
+              <div className="text-lg sm:text-2xl font-bold text-green-500">{sprint.stats.completionRate}%</div>
+              <div className="text-[10px] sm:text-xs text-muted-foreground">Completion</div>
             </div>
-            <div className="text-right">
-              <div className="text-lg font-semibold">{sprint.stats.completedIssues}/{sprint.stats.totalIssues}</div>
-              <div className="text-xs text-muted-foreground">Issues</div>
+            <div className="text-right hidden xs:block">
+              <div className="text-base sm:text-lg font-semibold">{sprint.stats.completedIssues}/{sprint.stats.totalIssues}</div>
+              <div className="text-[10px] sm:text-xs text-muted-foreground">Issues</div>
             </div>
-            <div className="text-right">
-              <div className="text-lg font-semibold">{sprint.stats.completedStoryPoints}</div>
-              <div className="text-xs text-muted-foreground">Points</div>
+            <div className="text-right hidden sm:block">
+              <div className="text-base sm:text-lg font-semibold">{sprint.stats.completedStoryPoints}</div>
+              <div className="text-[10px] sm:text-xs text-muted-foreground">Points</div>
             </div>
           </div>
         </div>
@@ -95,51 +99,51 @@ export function SprintCardContent({ sprint, variant = 'full' }: SprintCardConten
           </div>
         )}
 
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
           <Card className="bg-green-500/5 border-green-500/20">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
-                <span className="text-xs text-muted-foreground">Completed</span>
+            <CardContent className="p-2 sm:p-4">
+              <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
+                <CheckCircle2 className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />
+                <span className="text-[10px] sm:text-xs text-muted-foreground">Completed</span>
               </div>
-              <div className="text-2xl font-bold text-green-600">{sprint.stats.completedIssues}</div>
-              <div className="text-xs text-muted-foreground">issues done</div>
+              <div className="text-lg sm:text-2xl font-bold text-green-600">{sprint.stats.completedIssues}</div>
+              <div className="text-[10px] sm:text-xs text-muted-foreground">issues done</div>
             </CardContent>
           </Card>
           <Card className="bg-orange-500/5 border-orange-500/20">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <AlertCircle className="h-4 w-4 text-orange-500" />
-                <span className="text-xs text-muted-foreground">Spillover</span>
+            <CardContent className="p-2 sm:p-4">
+              <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
+                <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 text-orange-500" />
+                <span className="text-[10px] sm:text-xs text-muted-foreground">Spillover</span>
               </div>
-              <div className="text-2xl font-bold text-orange-600">{sprint.stats.totalIssues - sprint.stats.completedIssues}</div>
-              <div className="text-xs text-muted-foreground">incomplete</div>
+              <div className="text-lg sm:text-2xl font-bold text-orange-600">{sprint.stats.totalIssues - sprint.stats.completedIssues}</div>
+              <div className="text-[10px] sm:text-xs text-muted-foreground">incomplete</div>
             </CardContent>
           </Card>
           <Card className="bg-blue-500/5 border-blue-500/20">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <BarChart3 className="h-4 w-4 text-blue-500" />
-                <span className="text-xs text-muted-foreground">Velocity</span>
+            <CardContent className="p-2 sm:p-4">
+              <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
+                <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500" />
+                <span className="text-[10px] sm:text-xs text-muted-foreground">Velocity</span>
               </div>
-              <div className="text-2xl font-bold text-blue-600">{sprint.stats.completedStoryPoints}</div>
-              <div className="text-xs text-muted-foreground">story points</div>
+              <div className="text-lg sm:text-2xl font-bold text-blue-600">{sprint.stats.completedStoryPoints}</div>
+              <div className="text-[10px] sm:text-xs text-muted-foreground">story points</div>
             </CardContent>
           </Card>
           <Card className="bg-purple-500/5 border-purple-500/20">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Clock className="h-4 w-4 text-purple-500" />
-                <span className="text-xs text-muted-foreground">Duration</span>
+            <CardContent className="p-2 sm:p-4">
+              <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
+                <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-purple-500" />
+                <span className="text-[10px] sm:text-xs text-muted-foreground">Duration</span>
               </div>
-              <div className="text-2xl font-bold text-purple-600">{sprint.stats.durationDays}</div>
-              <div className="text-xs text-muted-foreground">days</div>
+              <div className="text-lg sm:text-2xl font-bold text-purple-600">{sprint.stats.durationDays}</div>
+              <div className="text-[10px] sm:text-xs text-muted-foreground">days</div>
             </CardContent>
           </Card>
         </div>
 
-        <div className="mb-6">
-          <div className="flex justify-between text-sm mb-2">
+        <div className="mb-4 sm:mb-6">
+          <div className="flex justify-between text-xs sm:text-sm mb-2">
             <span className="text-muted-foreground">Progress</span>
             <span className="font-medium">{sprint.stats.completionRate}%</span>
           </div>
@@ -150,22 +154,22 @@ export function SprintCardContent({ sprint, variant = 'full' }: SprintCardConten
 
         {sprint.contributors.length > 0 && (
           <>
-            <div className="mb-6">
-              <div className="flex items-center gap-2 text-sm font-medium mb-4">
-                <Users className="h-4 w-4 text-primary" />
+            <div className="mb-4 sm:mb-6">
+              <div className="flex items-center gap-2 text-xs sm:text-sm font-medium mb-3 sm:mb-4">
+                <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
                 Team Contributions ({sprint.contributors.length})
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
                 {sprint.contributors.map(contributor => (
-                  <div key={contributor.id} className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                    <Avatar className="h-10 w-10">
-                      <AvatarFallback className="text-sm font-medium">
+                  <div key={contributor.id} className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-muted/30 rounded-lg">
+                    <Avatar className="h-8 w-8 sm:h-10 sm:w-10 shrink-0">
+                      <AvatarFallback className="text-xs sm:text-sm font-medium">
                         {contributor.name.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium truncate">{contributor.name}</div>
-                      <div className="text-sm text-muted-foreground">
+                      <div className="font-medium text-sm truncate">{contributor.name}</div>
+                      <div className="text-xs sm:text-sm text-muted-foreground truncate">
                         {contributor.issuesCompleted} issues • {contributor.storyPointsCompleted} pts
                       </div>
                     </div>
@@ -173,42 +177,42 @@ export function SprintCardContent({ sprint, variant = 'full' }: SprintCardConten
                 ))}
               </div>
             </div>
-            <Separator className="my-6" />
+            <Separator className="my-4 sm:my-6" />
           </>
         )}
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           <div>
-            <div className="flex items-center gap-2 text-sm font-medium mb-4">
-              <TrendingUp className="h-4 w-4 text-primary" />
+            <div className="flex items-center gap-2 text-xs sm:text-sm font-medium mb-3 sm:mb-4">
+              <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
               Issues ({sprint.issues.length})
             </div>
-            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+            <div className="space-y-2 max-h-[200px] sm:max-h-[300px] overflow-y-auto pr-2">
               {sprint.issues.map(issue => (
                 <div
                   key={issue.id}
-                  className={`flex items-center gap-3 p-3 rounded-lg text-sm ${
+                  className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg text-xs sm:text-sm ${
                     issue.status_category === 'done' ? 'bg-green-500/5 border border-green-500/20' : 'bg-orange-500/5 border border-orange-500/20'
                   }`}
                 >
                   {issue.status_category === 'done' ? (
-                    <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                    <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-500 shrink-0" />
                   ) : (
-                    <AlertCircle className="h-4 w-4 text-orange-500 shrink-0" />
+                    <AlertCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-orange-500 shrink-0" />
                   )}
-                  <Badge variant="outline" className="font-mono text-xs shrink-0">
+                  <Badge variant="outline" className="font-mono text-[10px] sm:text-xs shrink-0">
                     {issue.issue_key}
                   </Badge>
                   <span className="truncate flex-1">{issue.summary}</span>
                   {issue.story_points != null && issue.story_points > 0 && (
-                    <Badge variant="secondary" className="shrink-0 text-xs">
+                    <Badge variant="secondary" className="shrink-0 text-[10px] sm:text-xs">
                       {issue.story_points} pts
                     </Badge>
                   )}
                 </div>
               ))}
               {sprint.issues.length === 0 && (
-                <div className="text-sm text-muted-foreground text-center py-8">
+                <div className="text-xs sm:text-sm text-muted-foreground text-center py-6 sm:py-8">
                   No issues found
                 </div>
               )}
@@ -216,24 +220,24 @@ export function SprintCardContent({ sprint, variant = 'full' }: SprintCardConten
           </div>
 
           <div>
-            <div className="flex items-center gap-2 text-sm font-medium mb-4">
-              <Clock className="h-4 w-4 text-primary" />
+            <div className="flex items-center gap-2 text-xs sm:text-sm font-medium mb-3 sm:mb-4">
+              <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
               Activity Timeline
             </div>
-            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+            <div className="space-y-2 sm:space-y-3 max-h-[200px] sm:max-h-[300px] overflow-y-auto pr-2">
               {sprint.history.map((item) => (
-                <div key={item.id} className="flex items-start gap-3 text-sm">
-                  <div className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
-                  <div className="flex-1">
-                    <div>{getActionDescription(item)}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">
+                <div key={item.id} className="flex items-start gap-2 sm:gap-3 text-xs sm:text-sm">
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary mt-1.5 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="truncate">{getActionDescription(item)}</div>
+                    <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
                       {format(new Date(item.created_at), 'MMM d, yyyy h:mm a')}
                     </div>
                   </div>
                 </div>
               ))}
               {sprint.history.length === 0 && (
-                <div className="text-sm text-muted-foreground text-center py-8">
+                <div className="text-xs sm:text-sm text-muted-foreground text-center py-6 sm:py-8">
                   No history recorded
                 </div>
               )}
