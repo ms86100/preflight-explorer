@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
 const SITE_ACCESS_KEY = 'vertex_site_access';
-const VALID_KEY = import.meta.env.VITE_SITE_ACCESS_KEY || 'vertex2025';
+const VALID_KEY = import.meta.env.VITE_SITE_ACCESS_KEY || 'welcome to the future';
 
 export const useSiteAccess = () => {
   const [hasAccess, setHasAccess] = useState<boolean>(false);

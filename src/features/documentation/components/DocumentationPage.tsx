@@ -8,10 +8,18 @@ import { DeploymentSection } from './DeploymentSection';
 import { DocSection } from '../types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Menu } from 'lucide-react';
+import { ArrowLeft, Menu, BookOpen, FileText, Database, Layers, Server } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
+
+const sectionLabels: Record<DocSection, { label: string; icon: React.ElementType }> = {
+  'overview': { label: 'Overview', icon: BookOpen },
+  'modules': { label: 'Modules', icon: Layers },
+  'database': { label: 'Database', icon: Database },
+  'tech-stack': { label: 'Tech Stack', icon: FileText },
+  'deployment': { label: 'Deployment', icon: Server },
+};
 
 export const DocumentationPage: React.FC = () => {
   const [activeSection, setActiveSection] = useState<DocSection>('overview');
@@ -44,19 +52,28 @@ export const DocumentationPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center gap-4">
+        <div className="container flex h-14 items-center gap-2 sm:gap-4">
           {isMobile && (
             <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-5 w-5" />
+                <Button variant="outline" size="sm" className="gap-2 flex-shrink-0">
+                  <Menu className="h-4 w-4" />
+                  <span className="text-xs font-medium">{sectionLabels[activeSection].label}</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-64 p-4">
-                <DocNavigation
-                  activeSection={activeSection}
-                  onSectionChange={handleSectionChange}
-                />
+              <SheetContent side="left" className="w-72 p-0">
+                <SheetHeader className="p-4 border-b bg-muted/30">
+                  <SheetTitle className="flex items-center gap-2 text-base">
+                    <BookOpen className="h-4 w-4" />
+                    Documentation
+                  </SheetTitle>
+                </SheetHeader>
+                <ScrollArea className="h-[calc(100vh-4rem)] p-4">
+                  <DocNavigation
+                    activeSection={activeSection}
+                    onSectionChange={handleSectionChange}
+                  />
+                </ScrollArea>
               </SheetContent>
             </Sheet>
           )}
@@ -64,10 +81,10 @@ export const DocumentationPage: React.FC = () => {
             variant="ghost" 
             size="sm" 
             onClick={() => navigate('/')}
-            className="gap-2"
+            className="gap-2 flex-shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to App
+            <span className="hidden sm:inline">Back to App</span>
           </Button>
           <div className="flex-1" />
           <span className="text-sm font-medium hidden md:inline">Vertex PM Documentation</span>

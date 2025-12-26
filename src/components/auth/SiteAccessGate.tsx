@@ -60,6 +60,7 @@ export const SiteAccessGate: React.FC<SiteAccessGateProps> = ({ children }) => {
           </div>
           <h1 className="text-3xl font-bold tracking-tight">Vertex PM</h1>
           <p className="text-muted-foreground">Enterprise Project Management Platform</p>
+          <p className="text-sm font-medium text-primary/80 italic">"I am scalable"</p>
         </div>
 
         {/* Access Form */}
