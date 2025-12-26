@@ -32,3 +32,9 @@ verify_jwt = false
 
 [functions.git-demo-seed]
 verify_jwt = false
+
+[functions.seed-admin-user]
+verify_jwt = false
+
+[functions.seed-demo-data]
+verify_jwt = false
