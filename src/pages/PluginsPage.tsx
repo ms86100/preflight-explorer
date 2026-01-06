@@ -13,6 +13,7 @@ import {
   Zap, BarChart3, Shield, Workflow, Bell, Layout, FileText, GitBranch,
 } from 'lucide-react';
 import { GitIntegrationPanel } from '@/features/git-integration/components/GitIntegrationPanel';
+import { CustomFieldsManager } from '@/features/custom-fields';
 
 const CATEGORY_ICONS: Record<string, typeof Puzzle> = {
   core: Layout,
@@ -229,17 +230,7 @@ export default function PluginsPage() {
 
           {isCustomFieldsEnabled && (
             <TabsContent value="custom-fields-config" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Custom Fields Configuration</CardTitle>
-                  <CardDescription>Manage custom fields for your issues</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Go to <a href="/admin" className="text-primary hover:underline">Administration → Custom Fields</a> to manage your custom field definitions.
-                  </p>
-                </CardContent>
-              </Card>
+              <CustomFieldsManager />
             </TabsContent>
           )}
 
