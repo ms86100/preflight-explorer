@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Redirecting…</title>
+    <meta name="robots" content="noindex" />
+  </head>
+  <body>
+    <script>
+      (function () {
+        // SPA deep-link refresh support for static hosts that return 404 for non-root routes.
+        // Redirect to index.html at the site root while preserving the intended path.
+        var path = window.location.pathname || "/";
+        var search = window.location.search || "";
+        var hash = window.location.hash || "";
+        var target = path + search + hash;
+
+        // We use a reserved query param that main.tsx will consume and then restore.
+        var url = "/?__redirect=" + encodeURIComponent(target);
+        window.location.replace(url);
+      })();
+    </script>
+  </body>
+</html>
