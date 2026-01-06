@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 const NotFound = () => {
   const location = useLocation();
@@ -12,14 +12,19 @@ const NotFound = () => {
         <h1 className="mb-4 text-4xl font-bold">404</h1>
         <p className="mb-4 text-xl text-muted-foreground">Oops! Page not found</p>
         <p className="mb-4 text-sm text-muted-foreground">
-          The page <code className="px-1 py-0.5 bg-muted-foreground/10 rounded">{location.pathname}</code> does not exist.
+          The page{" "}
+          <code className="px-1 py-0.5 bg-muted-foreground/10 rounded">
+            {location.pathname}
+          </code>{" "}
+          does not exist.
         </p>
-        <a href="/" className="text-primary underline hover:text-primary/90">
+        <Link to="/" className="text-primary underline hover:text-primary/90">
           Return to Home
-        </a>
+        </Link>
       </div>
     </div>
   );
 };
 
 export default NotFound;
+
